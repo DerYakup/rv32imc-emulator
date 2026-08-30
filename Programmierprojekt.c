@@ -353,6 +353,14 @@ Bit 7 → imm[11]*/
             cpu->regfile_[rd]=imm_u;
         }
         cpu->pc_+=4;
+        break;
+    }
+    case 0x17:{ // AUIPC
+        uint32_t imm_u = instruction & 0xFFFFF000;
+
+        if(rd!=0) cpu->regfile_[rd]= cpu->pc_ +imm_u;
+        cpu->pc_+=4;
+        break;
     }
         default:
             // Unbekannter Befehl: pc bleibt stehen -> Programm haelt an
