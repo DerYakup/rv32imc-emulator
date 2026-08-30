@@ -302,22 +302,34 @@ Bit 7 → imm[11]*/
 */
     case 0x23: { // SW / SB
 
-    uint32_t imm_u= ((instruction>>25)&0x7F)<<5 | ((instruction>>7)&0x1F);
-    if(imm_u&0x800){
-        imm_u=imm_u|0xFFFFF000;
-    }
-    int32_t imm = (int32_t)imm_u;
-    int32_t addr = cpu->regfile_[rs1]+ imm;
-        if (funct3==0x2)
+        uint32_t imm_u= ((instruction>>25)&0x7F)<<5 | ((instruction>>7)&0x1F);
+        if(imm_u&0x800){
+            imm_u=imm_u|0xFFFFF000;
+        }
+        int32_t imm = (int32_t)imm_u;
+        uint32_t addr = cpu->regfile_[rs1]+ imm;
+
+        switch (funct3)
         {
-            *(uint32_t *)(cpu->data_mem_ + addr) = cpu->regfile_[rs2];
-            cpu->pc_+=4;
-        }
-        else if(funct3==0x0){ //SB
+        case 0x0: //SB
             CPU_store_byte(cpu, addr, (cpu->regfile_[rs2]&0xFF));
+            break;
+        case 0x1: { //SH
+            cpu->data_mem_[addr] = cpu->regfile_[rs2] &0xFF ;
+            cpu->data_mem_[addr+1] = (cpu->regfile_[rs2]>>8) &0xFF ;
+            break;
+            }
+        case 0x2: { //SW
+            cpu->data_mem_[addr] = cpu->regfile_[rs2] &0xFF ;
+            cpu->data_mem_[addr+1] = (cpu->regfile_[rs2]>>8) &0xFF ;
+            cpu->data_mem_[addr+2] = (cpu->regfile_[rs2]>>16) &0xFF ;
+            cpu->data_mem_[addr+3] = (cpu->regfile_[rs2]>>24) &0xFF ;
+            break;
+            }
+        default:
+            break;
+        }  
             cpu->pc_+=4;
-        }
-        
         break;
     }
 
