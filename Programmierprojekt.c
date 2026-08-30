@@ -248,22 +248,84 @@ Bits 11–8 → imm[4:1]
 Bit 7 → imm[11]*/
 
 
-    case 0x63: { // BEQ
-        if (funct3 == 0x0){
+    case 0x63: {
             uint32_t imm_u= ((instruction >> 31) & 0x1) << 12  | ((instruction >> 25) & 0x3F) << 5 | ((instruction >> 8) & 0xF) << 1 | ((instruction >>7)& 0x1)<<11 ;
             if(imm_u&0x1000){
                 imm_u= imm_u | 0xFFFFE000;
             }
             int32_t imm= (int32_t)imm_u;
-            if (cpu->regfile_[rs1]==cpu->regfile_[rs2])
+
+            switch (funct3)
             {
-                cpu->pc_+=imm;
+            case 0x0:{ //BEQ
+                if (cpu->regfile_[rs1]==cpu->regfile_[rs2])
+                {
+                    cpu->pc_+=imm;
+                }
+                else
+                {
+                    cpu->pc_+=4;
+                } 
+                break;
             }
-            else
-            {
-                cpu->pc_+=4;
-            }            
-        }
+            case 0x1:{  //BNE
+                if (cpu->regfile_[rs1]!=cpu->regfile_[rs2])
+                {
+                    cpu->pc_+=imm;
+                }
+                else
+                {
+                    cpu->pc_+=4;
+                } 
+                break;
+            }
+            case 0x4:{ // BLT 
+                if ((int32_t)(cpu->regfile_[rs1])<(int32_t)(cpu->regfile_[rs2]))
+                {
+                    cpu->pc_+=imm;
+                }
+                else
+                {
+                    cpu->pc_+=4;
+                } 
+                break;
+            }
+            case 0x5:{ //BGE
+                if ((int32_t)(cpu->regfile_[rs1])>=(int32_t)(cpu->regfile_[rs2]))
+                {
+                    cpu->pc_+=imm;
+                }
+                else
+                {
+                    cpu->pc_+=4;
+                } 
+                break;
+            }
+            case 0x6:{ //BLTU
+                 if (cpu->regfile_[rs1]<cpu->regfile_[rs2])
+                {
+                    cpu->pc_+=imm;
+                }
+                else
+                {
+                    cpu->pc_+=4;
+                } 
+                break;
+            }
+            case 0x7:{ //BGEU
+                 if (cpu->regfile_[rs1]>=cpu->regfile_[rs2])
+                {
+                    cpu->pc_+=imm;
+                }
+                else
+                {
+                    cpu->pc_+=4;
+                } 
+                break;
+             }
+            default:
+                break;
+            }          
         
         break;
     }
