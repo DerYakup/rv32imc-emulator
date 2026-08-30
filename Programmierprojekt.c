@@ -278,6 +278,19 @@ Bit 7 → imm[11]*/
         cpu->pc_+=imm;
         break;
     }
+    case 0x67:{//JALR
+        uint32_t imm_u = (instruction >> 20) & 0xFFF;
+        if(imm_u & 0x800){
+            imm_u |=0xFFFFF000;
+        }
+        int32_t imm= (int32_t)imm_u;
+        if(funct3==0x0){
+           if(rd!=0) cpu->regfile_[rd]=cpu->pc_+4; 
+            cpu->pc_=(cpu->regfile_[rs1]+imm)&~1;
+        }
+        
+        break;
+    }
 
     /*Immediate  Bits 31–20 → imm[11:0] */
     case 0x03: { // LW
