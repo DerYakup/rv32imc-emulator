@@ -346,6 +346,14 @@ Bit 7 → imm[11]*/
         break;
     }
 
+    case 0x37:{ //LUI
+        uint32_t imm_u = instruction & 0xFFFFF000;
+
+        if(rd!=0){
+            cpu->regfile_[rd]=imm_u;
+        }
+        cpu->pc_+=4;
+    }
         default:
             // Unbekannter Befehl: pc bleibt stehen -> Programm haelt an
             break;
