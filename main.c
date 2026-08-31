@@ -187,51 +187,123 @@ void CPU_execute(CPU* cpu) {
 
         // R-Type
         case 0x33: { 
-        //ADD
         if(rd!=0){
-        if(funct3==0x0 && funct7 == 0x00){
-                cpu->regfile_[rd]= cpu->regfile_[rs1]+ cpu->regfile_[rs2];
-        }
-        //SUB
-        else if(funct3==0x0 && funct7 == 0x20){
-                cpu->regfile_[rd]=cpu->regfile_[rs1] - cpu->regfile_[rs2];
-        }
-        //SLL
-        else if(funct3==0x1 && funct7==0x0){
+
+            if(funct7==0x01){ // M Erweiterung
+                switch (funct3)
+                {
+                case 0x0:{ //MUL
+                    cpu->regfile_[rd]=(uint32_t)((int64_t)(int32_t)cpu->regfile_[rs1] * (int64_t)(int32_t)cpu->regfile_[rs2]);
+                    break;
+                }
+                 case 0x1:{ //MULH
+                    cpu->regfile_[rd]=((int64_t)(int32_t)cpu->regfile_[rs1]*(int64_t)(int32_t)cpu->regfile_[rs2]) >> 32;
+                    break;
+                }
+                 case 0x2:{ //MULHSU
+                    cpu->regfile_[rd]= ((int64_t)(int32_t)cpu->regfile_[rs1]*(uint64_t)cpu->regfile_[rs2])>>32;
+                    break;
+                }
+                 case 0x3:{ //MULHU
+                    cpu->regfile_[rd]= ((uint64_t)cpu->regfile_[rs1]*(uint64_t)cpu->regfile_[rs2])>>32;
+                    break;
+                }
+                case 0x4:{ //div
+                    if(cpu->regfile_[rs2]==0){
+                        cpu->regfile_[rd]=0xFFFFFFFF;
+                    }
+                    else if(cpu->regfile_[rs1]==0x80000000 && cpu->regfile_[rs2]==-1){
+                        cpu->regfile_[rd]=0x80000000;
+                    }
+                    else{
+                        cpu->regfile_[rd]=(int32_t)cpu->regfile_[rs1]/(int32_t)cpu->regfile_[rs2];
+                    }
+                    break;
+                }
+                case 0x5:{ //divu
+                    if(cpu->regfile_[rs2]==0){
+                        cpu->regfile_[rd]=0xFFFFFFFF;
+                    }
+                    else{
+                        cpu->regfile_[rd]=cpu->regfile_[rs1]/cpu->regfile_[rs2];
+                    }
+                    break;
+                }
+                case 0x6:{ //rem
+                    if(cpu->regfile_[rs2]==0){
+                        cpu->regfile_[rd]=cpu->regfile_[rs1];
+                    }
+                    else if(cpu->regfile_[rs1]==0x80000000 && cpu->regfile_[rs2]==-1){
+                        cpu->regfile_[rd]=0x80000000;
+                    }
+                    else{
+                        cpu->regfile_[rd]=(int32_t)cpu->regfile_[rs1]%(int32_t)cpu->regfile_[rs2];
+                    }
+                    break;
+                }
+                case 0x7:{ //remu
+                    if(cpu->regfile_[rs2]==0){
+                        cpu->regfile_[rd]=cpu->regfile_[rs1];
+                    }
+                    else{
+                        cpu->regfile_[rd]=cpu->regfile_[rs1]%cpu->regfile_[rs2];
+                    }
+                    break;
+                }
+                     
+                default:
+                    break;
+                }
+            }
+            else{
+            switch (funct3)
+            {
+            case 0x0:{
+                if(funct7==0) //ADD
+                    cpu->regfile_[rd]= cpu->regfile_[rs1]+ cpu->regfile_[rs2];
+                else if (funct7==0x2) //SUB
+                    cpu->regfile_[rd]=cpu->regfile_[rs1] - cpu->regfile_[rs2];
+                break;
+            }
+            case 0x1:{ //SLL
                 cpu->regfile_[rd]=cpu->regfile_[rs1]<< (cpu->regfile_[rs2]&0x1F);
-        }
-        //SLT
-        else if(funct3==0x2&&funct7==0x0){
-            cpu->regfile_[rd]=(int32_t)(cpu->regfile_[rs1])< (int32_t)(cpu->regfile_[rs2]);
-        }
-        //SLTU
-        else if(funct3==0x3 && funct7==0x0){
-            cpu->regfile_[rd]= cpu->regfile_[rs1] < cpu->regfile_[rs2];
-        }
-        //XOR
-        else if (funct3==0x4&& funct7==0x0){
-            cpu->regfile_[rd]=cpu->regfile_[rs1]^cpu->regfile_[rs2];
-        }
-        //SRL
-        else if(funct3==0x5 && funct7==0x0){
-            cpu->regfile_[rd]= cpu->regfile_[rs1] >> (cpu->regfile_[rs2]&0x1F);
-        }
-        //SRA
-        else if(funct3==0x5 && funct7==0x20){
-                cpu->regfile_[rd]= (int32_t)(cpu->regfile_[rs1]) >> (cpu->regfile_[rs2]&0x1F);
-        }
-        // OR
-        else if(funct3 == 0x6 && funct7 == 0x0){
+                break;
+            }
+            case 0x2:{ //SLT
+                cpu->regfile_[rd]=(int32_t)(cpu->regfile_[rs1])< (int32_t)(cpu->regfile_[rs2]);
+                break;
+            }
+            case 0x3:{ //SLTU
+                cpu->regfile_[rd]= cpu->regfile_[rs1] < cpu->regfile_[rs2];
+                break;
+            }
+            case 0x4:{ //XOR
+                cpu->regfile_[rd]=cpu->regfile_[rs1]^cpu->regfile_[rs2];
+                break;
+            }
+            case 0x5:{ //SRL /SRA
+                if(funct7==0x0) //SRL
+                    cpu->regfile_[rd]= cpu->regfile_[rs1] >> (cpu->regfile_[rs2]&0x1F);
+                else if(funct7==0x2) //SRA
+                    cpu->regfile_[rd]= (int32_t)(cpu->regfile_[rs1]) >> (cpu->regfile_[rs2]&0x1F);
+                break;
+            }
+            case 0x6:{ //OR
                 cpu->regfile_[rd] = cpu->regfile_[rs1] | cpu->regfile_[rs2];
-        }
-        //AND
-        else if(funct3==0x7 && funct7== 0x0){
+                break;
+            }
+            case 0x7:{ //AND
                 cpu->regfile_[rd] = cpu->regfile_[rs1] & cpu->regfile_[rs2];
+                break;
+            }
+            default:
+                break;
+            }
         }
         }
         cpu->pc_ += 4;
         break;
-    }
+        }
 
 /*
 Bit 31 → imm[12] 
