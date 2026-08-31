@@ -96,14 +96,6 @@ uint32_t CPU_load_word(CPU* cpu, uint32_t addr){
     return word;
 }
 
-uint32_t CPU_fetch(CPU* cpu){
-    uint32_t addr= cpu->pc_;
-
-    return 0;
-}
-
-
-
 /**
  * Speichert ein Byte (Befehl SB) -- VORGEGEBEN, bitte nicht veraendern.
  *
@@ -246,129 +238,163 @@ Bit 31 → imm[12]
 Bits 30–25 → imm[10:5]
 Bits 11–8 → imm[4:1]
 Bit 7 → imm[11]*/
+        case 0x63: { //B-Type
+                uint32_t imm_u= ((instruction >> 31) & 0x1) << 12  | ((instruction >> 25) & 0x3F) << 5 | ((instruction >> 8) & 0xF) << 1 | ((instruction >>7)& 0x1)<<11 ;
+                if(imm_u&0x1000){
+                    imm_u= imm_u | 0xFFFFE000;
+                }
+                int32_t imm= (int32_t)imm_u;
 
+                switch (funct3)
+                {
+                case 0x0:{ //BEQ
+                    if (cpu->regfile_[rs1]==cpu->regfile_[rs2])
+                    {
+                        cpu->pc_+=imm;
+                    }
+                    else
+                    {
+                        cpu->pc_+=4;
+                    } 
+                    break;
+                }
+                case 0x1:{  //BNE
+                    if (cpu->regfile_[rs1]!=cpu->regfile_[rs2])
+                    {
+                        cpu->pc_+=imm;
+                    }
+                    else
+                    {
+                        cpu->pc_+=4;
+                    } 
+                    break;
+                }
+                case 0x4:{ // BLT 
+                    if ((int32_t)(cpu->regfile_[rs1])<(int32_t)(cpu->regfile_[rs2]))
+                    {
+                        cpu->pc_+=imm;
+                    }
+                    else
+                    {
+                        cpu->pc_+=4;
+                    } 
+                    break;
+                }
+                case 0x5:{ //BGE
+                    if ((int32_t)(cpu->regfile_[rs1])>=(int32_t)(cpu->regfile_[rs2]))
+                    {
+                        cpu->pc_+=imm;
+                    }
+                    else
+                    {
+                        cpu->pc_+=4;
+                    } 
+                    break;
+                }
+                case 0x6:{ //BLTU
+                    if (cpu->regfile_[rs1]<cpu->regfile_[rs2])
+                    {
+                        cpu->pc_+=imm;
+                    }
+                    else
+                    {
+                        cpu->pc_+=4;
+                    } 
+                    break;
+                }
+                case 0x7:{ //BGEU
+                    if (cpu->regfile_[rs1]>=cpu->regfile_[rs2])
+                    {
+                        cpu->pc_+=imm;
+                    }
+                    else
+                    {
+                        cpu->pc_+=4;
+                    } 
+                    break;
+                }
+                default:
+                    break;
+                }          
+            
+            break;
+        }
 
-    case 0x63: {
-            uint32_t imm_u= ((instruction >> 31) & 0x1) << 12  | ((instruction >> 25) & 0x3F) << 5 | ((instruction >> 8) & 0xF) << 1 | ((instruction >>7)& 0x1)<<11 ;
-            if(imm_u&0x1000){
-                imm_u= imm_u | 0xFFFFE000;
+        case 0x6F: { // JAL
+            uint32_t imm_u = ((instruction >>31)&0x1)<<20 | ((instruction >> 21) & 0x3FF) << 1 | ((instruction >> 20)& 0x1) << 11 | ((instruction >> 12)&0xFF)<<12;
+            if(imm_u&0x100000){
+                imm_u=imm_u|0xFFE00000;
             }
             int32_t imm= (int32_t)imm_u;
-
-            switch (funct3)
-            {
-            case 0x0:{ //BEQ
-                if (cpu->regfile_[rs1]==cpu->regfile_[rs2])
-                {
-                    cpu->pc_+=imm;
-                }
-                else
-                {
-                    cpu->pc_+=4;
-                } 
-                break;
-            }
-            case 0x1:{  //BNE
-                if (cpu->regfile_[rs1]!=cpu->regfile_[rs2])
-                {
-                    cpu->pc_+=imm;
-                }
-                else
-                {
-                    cpu->pc_+=4;
-                } 
-                break;
-            }
-            case 0x4:{ // BLT 
-                if ((int32_t)(cpu->regfile_[rs1])<(int32_t)(cpu->regfile_[rs2]))
-                {
-                    cpu->pc_+=imm;
-                }
-                else
-                {
-                    cpu->pc_+=4;
-                } 
-                break;
-            }
-            case 0x5:{ //BGE
-                if ((int32_t)(cpu->regfile_[rs1])>=(int32_t)(cpu->regfile_[rs2]))
-                {
-                    cpu->pc_+=imm;
-                }
-                else
-                {
-                    cpu->pc_+=4;
-                } 
-                break;
-            }
-            case 0x6:{ //BLTU
-                 if (cpu->regfile_[rs1]<cpu->regfile_[rs2])
-                {
-                    cpu->pc_+=imm;
-                }
-                else
-                {
-                    cpu->pc_+=4;
-                } 
-                break;
-            }
-            case 0x7:{ //BGEU
-                 if (cpu->regfile_[rs1]>=cpu->regfile_[rs2])
-                {
-                    cpu->pc_+=imm;
-                }
-                else
-                {
-                    cpu->pc_+=4;
-                } 
-                break;
-             }
-            default:
-                break;
-            }          
-        
-        break;
-    }
-
-    case 0x6F: { // JAL
-        uint32_t imm_u = ((instruction >>31)&0x1)<<20 | ((instruction >> 21) & 0x3FF) << 1 | ((instruction >> 20)& 0x1) << 11 | ((instruction >> 12)&0xFF)<<12;
-        if(imm_u&0x100000){
-            imm_u=imm_u|0xFFE00000;
+            if(rd!=0) cpu->regfile_[rd]=cpu->pc_ +4;
+            cpu->pc_+=imm;
+            break;
         }
-        int32_t imm= (int32_t)imm_u;
-        if(rd!=0) cpu->regfile_[rd]=cpu->pc_ +4;
-        cpu->pc_+=imm;
-        break;
-    }
-    case 0x67:{//JALR
-        uint32_t imm_u = (instruction >> 20) & 0xFFF;
-        if(imm_u & 0x800){
-            imm_u |=0xFFFFF000;
+        case 0x67:{//JALR
+            uint32_t imm_u = (instruction >> 20) & 0xFFF;
+            if(imm_u & 0x800){
+                imm_u |=0xFFFFF000;
+            }
+            int32_t imm= (int32_t)imm_u;
+            if(funct3==0x0){
+            if(rd!=0) cpu->regfile_[rd]=cpu->pc_+4; 
+                cpu->pc_=(cpu->regfile_[rs1]+imm)&~1;
+            }
+            
+            break;
         }
-        int32_t imm= (int32_t)imm_u;
-        if(funct3==0x0){
-           if(rd!=0) cpu->regfile_[rd]=cpu->pc_+4; 
-            cpu->pc_=(cpu->regfile_[rs1]+imm)&~1;
-        }
-        
-        break;
-    }
 
     /*Immediate  Bits 31–20 → imm[11:0] */
-    case 0x03: { // LW
-        if(funct3==0x2){
+        case 0x03: { // L-Type
             uint32_t imm_u=((instruction>>20)&0xFFF);
-            if(imm_u&0x800){
-                imm_u=imm_u|0xFFFFF000;
-            }
+                if(imm_u&0x800){
+                    imm_u=imm_u|0xFFFFF000;
+                }
             int32_t imm= (int32_t)imm_u;
+            uint32_t addr = cpu->regfile_[rs1]+imm;
+            uint32_t value;
+            switch (funct3)
+            {   
+                case 0x0:{ //LB
+                    uint8_t value_8 = CPU_load_byte(cpu, addr);
+                    value= value_8;
+                    if(value_8 & 0x80){
+                        value |=0xFFFFFF00;
+                    }
+                    break;
+                    }
+                case 0x1: {//LH
+                    uint16_t value_16 = CPU_load_halfword(cpu,addr);
+                    value=value_16;
+                    if(value_16 & 0x8000){
+                        value|=0xFFFF0000;
+                    }
+                    break;
+                }
+                case 0x2:{ // LW
+                    value= CPU_load_word(cpu, addr);
+                    break;
+                }
+                case 0x4: {//LBU
+                    uint8_t value_8 = CPU_load_byte(cpu, addr);
+                    value= value_8;
+                    break;
+                    }
 
-            int32_t addr= CPU_load_word(cpu, (cpu->regfile_[rs1] + imm));
-            if(rd!=0) cpu->regfile_[rd] = addr;
-            cpu->pc_ +=4;
+                case 0x5: {//LHU
+                    uint16_t value_16 = CPU_load_halfword(cpu,addr);
+                    value=value_16;
+                    break;
+                    }
+            
+            default:
+                break;
+            }  
+                if(rd!=0) cpu->regfile_[rd] = value; 
+                cpu->pc_ +=4;
+            
+            break;
         }
-        break;
-    }
 
 /*Immediate Bits
 31-25-> imm [11:5]

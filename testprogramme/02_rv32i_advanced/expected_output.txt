@@ -1,0 +1,57 @@
+Testprogramm 2: RV32I Fortgeschritten
+
+--- Shifts SLL/SRL/SRA ---
+  SLL 0x12345678 << 4: erwartet=0x23456780, tatsaechlich=0x23456780  OK
+  SRL 0x12345678 >> 4: erwartet=0x01234567, tatsaechlich=0x01234567  OK
+  SRL (unsigned) 0xFF000000 >> 8: erwartet=0x00FF0000, tatsaechlich=0x00FF0000  OK
+  SRA (signed neg) >> 8: erwartet=0xFFFF0000, tatsaechlich=0xFFFF0000  OK
+  SRA (signed pos) >> 8: erwartet=0x00400000, tatsaechlich=0x00400000  OK
+
+--- SLT / SLTU ---
+  SLT  -1 < 1 (signed): erwartet=0x00000001, tatsaechlich=0x00000001  OK
+  SLTU -1 < 1 (unsigned): erwartet=0x00000000, tatsaechlich=0x00000000  OK
+
+--- Branches BLT/BGE/BLTU/BGEU ---
+  BLT  -5 < 3: erwartet=0x00000001, tatsaechlich=0x00000001  OK
+  BGE   3 >= -5: erwartet=0x00000001, tatsaechlich=0x00000001  OK
+  BLTU  3 < 5: erwartet=0x00000001, tatsaechlich=0x00000001  OK
+  BGEU max >= 5: erwartet=0x00000001, tatsaechlich=0x00000001  OK
+
+--- LB / LBU (Vorzeichenerweiterung) ---
+  LB  0x7F: erwartet=0x0000007F, tatsaechlich=0x0000007F  OK
+  LBU 0x7F: erwartet=0x0000007F, tatsaechlich=0x0000007F  OK
+  LB  0x80 (->negativ): erwartet=0xFFFFFF80, tatsaechlich=0xFFFFFF80  OK
+  LBU 0x80: erwartet=0x00000080, tatsaechlich=0x00000080  OK
+
+--- LH / LHU (Vorzeichenerweiterung) ---
+  LH  0x7FFF: erwartet=0x00007FFF, tatsaechlich=0x00007FFF  OK
+  LHU 0x7FFF: erwartet=0x00007FFF, tatsaechlich=0x00007FFF  OK
+  LH  0x8000 (->negativ): erwartet=0xFFFF8000, tatsaechlich=0xFFFF8000  OK
+  LHU 0x8000: erwartet=0x00008000, tatsaechlich=0x00008000  OK
+
+--- Unaligned Word-Zugriff ---
+  SW/LW @ ungerade Adresse: erwartet=0xDEADBEEF, tatsaechlich=0xDEADBEEF  OK
+
+--- AUIPC (pc-relativ) ---
+  Abstand zweier AUIPC == 4: erwartet=0x00000004, tatsaechlich=0x00000004  OK
+
+--- LUI (obere 20 Bit) ---
+  LUI 0x12345 -> 0x12345000: erwartet=0x12345000, tatsaechlich=0x12345000  OK
+
+--- Rekursion fak(10) ---
+  fak(10) == 3628800: erwartet=0x00375F00, tatsaechlich=0x00375F00  OK
+
+--- Iteration Summe 1..100 ---
+  Summe 1..100 == 5050: erwartet=0x000013BA, tatsaechlich=0x000013BA  OK
+
+--- Globale vs. Stack-Variablen ---
+  Stack-Variable: erwartet=0x00000007, tatsaechlich=0x00000007  OK
+  .data g_counter: erwartet=0x00000539, tatsaechlich=0x00000539  OK
+  .bss  g_zero: erwartet=0x0000002A, tatsaechlich=0x0000002A  OK
+
+--- strlen (LBU in Schleife) ---
+  strlen("Hallo") == 5: erwartet=0x00000005, tatsaechlich=0x00000005  OK
+
+Summe: 28 von 28 Tests bestanden
+ALLE TESTS BESTANDEN
+----- Programm Ende -----

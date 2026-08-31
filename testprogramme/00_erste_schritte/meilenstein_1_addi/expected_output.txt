@@ -1,0 +1,3 @@
+Im Regfile-Dump steht nach dem Lauf:
+    1: 2A
+(42 dezimal = 0x2A hexadezimal). Alle anderen Register bleiben 0.

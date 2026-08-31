@@ -1,0 +1,41 @@
+Testprogramm 1: RV32I Grundlagen
+
+--- Hello-World (SB/IO) ---
+  erwartet: Hallo Welt!
+  tatsaechlich: Hallo Welt!
+
+--- Konstante in Register ---
+  a = 42: erwartet=0x0000002A, tatsaechlich=0x0000002A  OK
+
+--- Addition ---
+  17 + 25: erwartet=0x0000002A, tatsaechlich=0x0000002A  OK
+
+--- Subtraktion ---
+  100 - 58: erwartet=0x0000002A, tatsaechlich=0x0000002A  OK
+
+--- Logik AND/OR/XOR ---
+  AND: erwartet=0x000F000F, tatsaechlich=0x000F000F  OK
+  OR: erwartet=0x0FFF0FFF, tatsaechlich=0x0FFF0FFF  OK
+  XOR: erwartet=0x0FF00FF0, tatsaechlich=0x0FF00FF0  OK
+
+--- Branch genommen (BEQ) ---
+  BEQ 7==7 -> Zweig genommen: erwartet=0x00000001, tatsaechlich=0x00000001  OK
+
+--- Branch nicht genommen (BEQ) ---
+  BEQ 7==8 -> Zweig uebersprungen: erwartet=0x00000005, tatsaechlich=0x00000005  OK
+
+--- Funktionsaufruf (JAL/JALR) ---
+  add(19, 23): erwartet=0x0000002A, tatsaechlich=0x0000002A  OK
+
+--- Globales Array lesen (LW) ---
+  g_array[0]: erwartet=0x0000000A, tatsaechlich=0x0000000A  OK
+  g_array[1]: erwartet=0x00000014, tatsaechlich=0x00000014  OK
+  g_array[2]: erwartet=0x0000001E, tatsaechlich=0x0000001E  OK
+  g_array[3]: erwartet=0x00000028, tatsaechlich=0x00000028  OK
+
+--- Globales Array schreiben (SW) ---
+  g_array[2] nach Schreiben: erwartet=0x000004D2, tatsaechlich=0x000004D2  OK
+
+Summe: 14 von 14 Tests bestanden
+ALLE TESTS BESTANDEN
+----- Programm Ende -----

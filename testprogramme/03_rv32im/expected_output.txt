@@ -1,0 +1,32 @@
+Testprogramm 3: RV32IM (Multiplikation/Division)
+
+--- MUL (untere 32 Bit) ---
+  17 * 23 == 391: erwartet=0x00000187, tatsaechlich=0x00000187  OK
+  -7 * 6 == -42: erwartet=0xFFFFFFD6, tatsaechlich=0xFFFFFFD6  OK
+  0x10000 * 0x10000 (Overflow) == 0: erwartet=0x00000000, tatsaechlich=0x00000000  OK
+
+--- MULH / MULHU / MULHSU ---
+  MULH   (-1)*(-1) obere = 0: erwartet=0x00000000, tatsaechlich=0x00000000  OK
+  MULHU  0xFFFFFFFF^2 obere = 0xFFFFFFFE: erwartet=0xFFFFFFFE, tatsaechlich=0xFFFFFFFE  OK
+  MULHSU -1 * 0xFFFFFFFF obere = 0xFFFFFFFF: erwartet=0xFFFFFFFF, tatsaechlich=0xFFFFFFFF  OK
+
+--- DIV / DIVU / REM / REMU ---
+  DIV  100 / 7 == 14: erwartet=0x0000000E, tatsaechlich=0x0000000E  OK
+  DIV  -100 / 7 == -14: erwartet=0xFFFFFFF2, tatsaechlich=0xFFFFFFF2  OK
+  DIVU 100 / 7 == 14: erwartet=0x0000000E, tatsaechlich=0x0000000E  OK
+  REM  100 % 7 == 2: erwartet=0x00000002, tatsaechlich=0x00000002  OK
+  REM  -100 % 7 == -2: erwartet=0xFFFFFFFE, tatsaechlich=0xFFFFFFFE  OK
+  REMU 100 % 7 == 2: erwartet=0x00000002, tatsaechlich=0x00000002  OK
+  REMU 0xFFFFFFF6 % 7 == 1: erwartet=0x00000001, tatsaechlich=0x00000001  OK
+
+--- Sonderfaelle (Division durch 0, Overflow) ---
+  DIV  x / 0 == 0xFFFFFFFF: erwartet=0xFFFFFFFF, tatsaechlich=0xFFFFFFFF  OK
+  DIVU x / 0 == 0xFFFFFFFF: erwartet=0xFFFFFFFF, tatsaechlich=0xFFFFFFFF  OK
+  REM  x % 0 == x (=123): erwartet=0x0000007B, tatsaechlich=0x0000007B  OK
+  REMU x % 0 == x (=123): erwartet=0x0000007B, tatsaechlich=0x0000007B  OK
+  DIV  INT_MIN / -1 == INT_MIN: erwartet=0x80000000, tatsaechlich=0x80000000  OK
+  REM  INT_MIN % -1 == 0: erwartet=0x00000000, tatsaechlich=0x00000000  OK
+
+Summe: 19 von 19 Tests bestanden
+ALLE TESTS BESTANDEN
+----- Programm Ende -----

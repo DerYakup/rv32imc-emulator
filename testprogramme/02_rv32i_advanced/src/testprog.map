@@ -1,0 +1,154 @@
+Archive member included to satisfy reference by file (symbol)
+
+/home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(muldi3.o)
+                              main.o (__mulsi3)
+/home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(div.o)
+                              io.o (__udivsi3)
+
+Merging object attributes
+
+
+There are no discarded input sections
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+iram             0x80000000         0x00010000         xr
+dram             0x00000000         0x00004000         rw
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+LOAD start.o
+LOAD io.o
+LOAD main.o
+LOAD /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a
+START GROUP
+LOAD /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/../../../../riscv32-unknown-elf/lib/libc.a
+LOAD /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/../../../../riscv32-unknown-elf/lib/libgloss.a
+END GROUP
+LOAD /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a
+
+.init           0x80000000       0x10
+ *(.init*)
+ .init          0x80000000       0x10 start.o
+                0x80000000                _start
+
+.text           0x80000010     0x1a10
+ *(.text*)
+ .text          0x80000010        0x0 start.o
+ .text          0x80000010      0x3b4 io.o
+                0x80000010                put_char
+                0x80000048                put_str
+                0x800000a0                newline
+                0x800000d0                put_udec
+                0x80000194                put_dec
+                0x800001f4                put_hex
+                0x80000284                test_group
+                0x800002d8                print_summary
+ .text          0x800003c4     0x1584 main.o
+                0x80000480                main
+ .text          0x80001948       0x24 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(muldi3.o)
+                0x80001948                __mulsi3
+ .text          0x8000196c       0xb4 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(div.o)
+                0x8000196c                __divsi3
+                0x80001974                __hidden___udivsi3
+                0x80001974                __udivsi3
+                0x800019bc                __umodsi3
+                0x800019f0                __modsi3
+
+.rodata         0x00000000      0x5ae
+ *(.rodata*)
+ .rodata        0x00000000       0xaf io.o
+ *fill*         0x000000af        0x1 
+ .rodata        0x000000b0      0x4fe main.o
+
+.data           0x000005ae        0x0
+ *(.data*)
+ .data          0x000005ae        0x0 start.o
+ .data          0x000005ae        0x0 io.o
+ .data          0x000005ae        0x0 main.o
+ .data          0x000005ae        0x0 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(muldi3.o)
+ .data          0x000005ae        0x0 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(div.o)
+
+.sdata          0x000005b0        0x4
+ *(.sdata*)
+ .sdata         0x000005b0        0x4 main.o
+                0x000005b0                g_counter
+
+.bss            0x000005b4       0x14
+ *(.sbss*)
+ .sbss          0x000005b4        0x8 io.o
+                0x000005b4                tests_passed
+                0x000005b8                tests_failed
+ .sbss          0x000005bc        0xc main.o
+                0x000005bc                g_zero
+                0x000005c0                g_buf
+ *(.bss*)
+ .bss           0x000005c8        0x0 start.o
+ .bss           0x000005c8        0x0 io.o
+ .bss           0x000005c8        0x0 main.o
+ .bss           0x000005c8        0x0 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(muldi3.o)
+ .bss           0x000005c8        0x0 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(div.o)
+ *(COMMON)
+                0x003ff000                        __stack_top = 0x3ff000
+OUTPUT(testprog.elf elf32-littleriscv)
+
+.riscv.attributes
+                0x00000000       0x31
+ .riscv.attributes
+                0x00000000       0x2f start.o
+ .riscv.attributes
+                0x0000002f       0x31 io.o
+ .riscv.attributes
+                0x00000060       0x31 main.o
+ .riscv.attributes
+                0x00000091       0x2f /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(muldi3.o)
+ .riscv.attributes
+                0x000000c0       0x2f /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(div.o)
+
+.comment        0x00000000       0x19
+ .comment       0x00000000       0x19 io.o
+                                 0x1a (size before relaxing)
+ .comment       0x00000019        0x0 main.o
+                                 0x1a (size before relaxing)
+
+.note.GNU-stack
+                0x00000000        0x0
+ .note.GNU-stack
+                0x00000000        0x0 io.o
+ .note.GNU-stack
+                0x00000000        0x0 main.o
+
+.debug_line     0x00000000      0x1cd
+ .debug_line    0x00000000       0x7a /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(muldi3.o)
+ .debug_line    0x0000007a      0x153 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(div.o)
+
+.debug_line_str
+                0x00000000       0x8b
+ .debug_line_str
+                0x00000000       0x8b /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(muldi3.o)
+                                 0x85 (size before relaxing)
+ .debug_line_str
+                0x0000008b        0x0 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(div.o)
+                                 0x82 (size before relaxing)
+
+.debug_info     0x00000000       0x90
+ .debug_info    0x00000000       0x31 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(muldi3.o)
+ .debug_info    0x00000031       0x5f /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(div.o)
+
+.debug_abbrev   0x00000000       0x50
+ .debug_abbrev  0x00000000       0x28 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(muldi3.o)
+ .debug_abbrev  0x00000028       0x28 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(div.o)
+
+.debug_aranges  0x00000000       0x40
+ .debug_aranges
+                0x00000000       0x20 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(muldi3.o)
+ .debug_aranges
+                0x00000020       0x20 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(div.o)
+
+.debug_str      0x00000000       0xf2
+ .debug_str     0x00000000       0xf2 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(muldi3.o)
+                                 0x9a (size before relaxing)
+ .debug_str     0x000000f2        0x0 /home/thorben/opt/rv32i_zicsr_zifencei/lib/gcc/riscv32-unknown-elf/15.2.0/libgcc.a(div.o)
+                                 0xc7 (size before relaxing)

@@ -1,0 +1,3 @@
+Erwartete Zeichenausgabe auf der Standardausgabe (vor dem Regfile-Dump):
+    Hallo
+(Mit abschliessendem Zeilenumbruch.)

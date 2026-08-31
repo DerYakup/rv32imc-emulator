@@ -1,0 +1,36 @@
+Testprogramm 4: RV32IMC (Compressed-Befehle)
+
+--- RV32IM-Auswahl (indirekt C.* ) ---
+  MUL 17 * 23 == 391: erwartet=0x00000187, tatsaechlich=0x00000187  OK
+  DIV 100 / 7 == 14: erwartet=0x0000000E, tatsaechlich=0x0000000E  OK
+  REM 100 % 7 == 2: erwartet=0x00000002, tatsaechlich=0x00000002  OK
+  add3(10,20,12)==42: erwartet=0x0000002A, tatsaechlich=0x0000002A  OK
+
+--- Rekursion fib(15) (C.LWSP/C.SWSP) ---
+  fib(15) == 610: erwartet=0x00000262, tatsaechlich=0x00000262  OK
+
+--- Bit-Operationen (C.SRLI/C.SRAI/C.ANDI) ---
+  C.SRLI 0x80 >> 3: erwartet=0x00000010, tatsaechlich=0x00000010  OK
+  C.SRAI -64 >> 3 (== -8): erwartet=0xFFFFFFF8, tatsaechlich=0xFFFFFFF8  OK
+  C.ANDI 0xABCD & 0x0F: erwartet=0x0000000D, tatsaechlich=0x0000000D  OK
+
+--- C.LUI (obere Bits) ---
+  C.LUI 0x1  -> 0x00001000: erwartet=0x00001000, tatsaechlich=0x00001000  OK
+  C.LUI 0x1F -> 0x0001F000: erwartet=0x0001F000, tatsaechlich=0x0001F000  OK
+  C.LUI neg  -> 0xFFFFF000: erwartet=0xFFFFF000, tatsaechlich=0xFFFFF000  OK
+
+--- Schleife (C.BEQZ/C.BNEZ) ---
+  Summe 10..1 == 55: erwartet=0x00000037, tatsaechlich=0x00000037  OK
+  flag gesetzt: erwartet=0x00000001, tatsaechlich=0x00000001  OK
+
+--- Weitere C-Befehle (C.SUB/AND/OR/XOR, C.BEQZ, C.JALR) ---
+  C.SUB 0x3C - 0x0F: erwartet=0x0000002D, tatsaechlich=0x0000002D  OK
+  C.AND 0x3C & 0x0F: erwartet=0x0000000C, tatsaechlich=0x0000000C  OK
+  C.OR  0x3C | 0x0F: erwartet=0x0000003F, tatsaechlich=0x0000003F  OK
+  C.XOR 0x3C ^ 0x0F: erwartet=0x00000033, tatsaechlich=0x00000033  OK
+  C.BEQZ (if(nz)): erwartet=0x00000001, tatsaechlich=0x00000001  OK
+  C.JALR add3(4,5,6): erwartet=0x0000000F, tatsaechlich=0x0000000F  OK
+
+Summe: 19 von 19 Tests bestanden
+ALLE TESTS BESTANDEN
+----- Programm Ende -----
