@@ -120,9 +120,9 @@ void CPU_store_byte(CPU* cpu, uint32_t addr, uint8_t value) {
  * Instruction fetch Instruction decode, Execute, Memory access, Write back
  */
 // instruction & 0x7F opcode extrahieren
-void CPU_execute(CPU* cpu) {
+void CPU_execute(CPU* cpu,uint32_t instruction) {
 
-	uint32_t instruction = *(uint32_t*)(cpu->instr_mem_ + (cpu->pc_ & 0xFFFFF));
+	//uint32_t instruction = *(uint32_t*)(cpu->instr_mem_ + (cpu->pc_ & 0xFFFFF));
     uint32_t opcode = instruction & 0x7F;
     uint32_t rd     = (instruction >> 7)  & 0x1F;
     uint32_t rs1    = (instruction >> 15) & 0x1F;
@@ -535,14 +535,64 @@ Bit 7 → imm[11]*/
 
 }
 
+/*
+Expandiert einen 16-Bit-Compressed-Befehl in sein 32-Bit
+Aequivalent. Gibt 0 zurueck, falls der Befehl ungueltig ist. */
+
+uint32_t expand_compressed(uint16_t c) {
+    uint8_t op= c & 0x3;
+    // op[1:0]-> Quadrant
+    uint8_t funct3 = (c >> 13) & 0x7; // funct3 ueber alle Quadranten
+    switch (op)
+    {
+    case 0x0: //Quadrant 0
+        switch (funct3)
+        {
+        case 0x0:
+            
+            return;
+        case 0x2:
+            
+            return;
+        case 0x6:
+            
+            return;
+        }
+        
+        break;
+
+    case 0x1: //Quadrant 1
+        
+        break;
+    case 0x2: //Quadrant 2
+        
+        break;
+    }
+
+    return 0; // Ungueltige Instruktion
+    }
+
 int main(int argc, char* argv[]) {
 	printf("C Praktikum\nHU Risc-V  Emulator 2026\n");
 
 	CPU* cpu_inst;
-
 	cpu_inst = CPU_init(argv[1], argv[2]);
     for(uint32_t i = 0; i <1000000; i++) { // Hauptschleife: fuehrt Befehle aus, bis die Obergrenze erreicht ist
-    	CPU_execute(cpu_inst);
+
+        uint32_t instruction_32;
+        int length;
+        uint32_t old_pc=cpu_inst->pc_;
+        uint16_t instruction_16 = *(uint16_t*)(cpu_inst->instr_mem_ + (cpu_inst->pc_ & 0xFFFFF));
+        if((instruction_16 & 0x3)==0x3){ //nachladen da nicht compressed
+            instruction_32 = (uint32_t)(*(uint16_t*)(cpu_inst->instr_mem_ + ((cpu_inst->pc_+2) & 0xFFFFF)))<<16|instruction_16;
+            length=4;
+        }
+        else{ //16 bit Anweisung
+        instruction_32 = expand_compressed(instruction_16);
+        length=2;
+        }
+    	CPU_execute(cpu_inst,instruction_32);
+        if(old_pc==cpu_inst->pc_) cpu_inst->pc_+=length;
     }
 
 	printf("\n-----------------------RISC-V program terminate------------------------\nRegfile values:\n");
