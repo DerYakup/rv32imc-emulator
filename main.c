@@ -521,13 +521,13 @@ uint32_t expand_compressed(uint16_t c) {
         {
         case 0x0:
             
-            return;
+            return 0;
         case 0x2:
             
-            return;
+            return 0;
         case 0x6:
             
-            return;
+            return 0;
         }
         
         break;
@@ -563,7 +563,7 @@ int main(int argc, char* argv[]) {
         length=2;
         }
     	CPU_execute(cpu_inst,instruction_32);
-        if(old_pc==cpu_inst->pc_) cpu_inst->pc_+=length;
+        if((old_pc==cpu_inst->pc_)&& instruction_32!=0x00000000) cpu_inst->pc_+=length;
     }
 
 	printf("\n-----------------------RISC-V program terminate------------------------\nRegfile values:\n");
