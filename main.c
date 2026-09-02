@@ -88,11 +88,11 @@ uint16_t CPU_load_halfword(CPU* cpu, uint32_t addr){
 
 
 uint32_t CPU_load_word(CPU* cpu, uint32_t addr){
-    uint32_t word= cpu-> data_mem_[addr+3];
-    word = word << 24;
-    word = word | (cpu->data_mem_[addr + 2] << 16);
-    word = word | (cpu->data_mem_[addr + 1] << 8);
-    word = word | (cpu->data_mem_[addr]);
+    uint32_t word = ((uint32_t)cpu->data_mem_[addr + 3] << 24)
+                  | ((uint32_t)cpu->data_mem_[addr + 2] << 16)
+                  | ((uint32_t)cpu->data_mem_[addr + 1] << 8)
+                  |  (uint32_t)cpu->data_mem_[addr];
+
     return word;
 }
 
@@ -120,8 +120,8 @@ void CPU_store_byte(CPU* cpu, uint32_t addr, uint8_t value) {
  * Instruction fetch Instruction decode, Execute, Memory access, Write back
  */
 // instruction & 0x7F opcode extrahieren
-void CPU_execute(CPU* cpu,uint32_t instruction) {
-
+void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified) {
+    uint32_t old_x1 = cpu->regfile_[1];
 	//uint32_t instruction = *(uint32_t*)(cpu->instr_mem_ + (cpu->pc_ & 0xFFFFF));
     uint32_t opcode = instruction & 0x7F;
     uint32_t rd     = (instruction >> 7)  & 0x1F;
@@ -145,8 +145,10 @@ void CPU_execute(CPU* cpu,uint32_t instruction) {
 
                 switch(funct3){
                     case 0x0 : {//ADDI
-                        cpu->regfile_[rd] = cpu->regfile_[rs1] + imm;
-                        break;}
+
+                cpu->regfile_[rd] = cpu->regfile_[rs1] + imm;
+                        break;
+                        }
                     case 0x1 : {//SLLI
                         cpu->regfile_[rd] = cpu->regfile_[rs1] << (imm & 0x1F);
                         break;
@@ -233,7 +235,7 @@ void CPU_execute(CPU* cpu,uint32_t instruction) {
                         cpu->regfile_[rd]=cpu->regfile_[rs1];
                     }
                     else if(cpu->regfile_[rs1]==0x80000000 && cpu->regfile_[rs2]==-1){
-                        cpu->regfile_[rd]=0x80000000;
+                        cpu->regfile_[rd]=0;
                     }
                     else{
                         cpu->regfile_[rd]=(int32_t)cpu->regfile_[rs1]%(int32_t)cpu->regfile_[rs2];
@@ -260,7 +262,7 @@ void CPU_execute(CPU* cpu,uint32_t instruction) {
             case 0x0:{
                 if(funct7==0) //ADD
                     cpu->regfile_[rd]= cpu->regfile_[rs1]+ cpu->regfile_[rs2];
-                else if (funct7==0x2) //SUB
+                else if (funct7==0x20) //SUB
                     cpu->regfile_[rd]=cpu->regfile_[rs1] - cpu->regfile_[rs2];
                 break;
             }
@@ -283,7 +285,7 @@ void CPU_execute(CPU* cpu,uint32_t instruction) {
             case 0x5:{ //SRL /SRA
                 if(funct7==0x0) //SRL
                     cpu->regfile_[rd]= cpu->regfile_[rs1] >> (cpu->regfile_[rs2]&0x1F);
-                else if(funct7==0x2) //SRA
+                else if(funct7==0x20) //SRA
                     cpu->regfile_[rd]= (int32_t)(cpu->regfile_[rs1]) >> (cpu->regfile_[rs2]&0x1F);
                 break;
             }
@@ -321,6 +323,7 @@ Bit 7 → imm[11]*/
                     if (cpu->regfile_[rs1]==cpu->regfile_[rs2])
                     {
                         cpu->pc_+=imm;
+                        *pc_modified=1; 
                     }
                     break;
                 }
@@ -328,6 +331,7 @@ Bit 7 → imm[11]*/
                     if (cpu->regfile_[rs1]!=cpu->regfile_[rs2])
                     {
                         cpu->pc_+=imm;
+                        *pc_modified=1; 
                     }
                     break;
                 }
@@ -335,6 +339,7 @@ Bit 7 → imm[11]*/
                     if ((int32_t)(cpu->regfile_[rs1])<(int32_t)(cpu->regfile_[rs2]))
                     {
                         cpu->pc_+=imm;
+                        *pc_modified=1; 
                     }
                     break;
                 }
@@ -342,6 +347,7 @@ Bit 7 → imm[11]*/
                     if ((int32_t)(cpu->regfile_[rs1])>=(int32_t)(cpu->regfile_[rs2]))
                     {
                         cpu->pc_+=imm;
+                        *pc_modified=1; 
                     }
                     break;
                 }
@@ -349,6 +355,7 @@ Bit 7 → imm[11]*/
                     if (cpu->regfile_[rs1]<cpu->regfile_[rs2])
                     {
                         cpu->pc_+=imm;
+                        *pc_modified=1; 
                     }
                     else
                     break;
@@ -357,6 +364,7 @@ Bit 7 → imm[11]*/
                     if (cpu->regfile_[rs1]>=cpu->regfile_[rs2])
                     {
                         cpu->pc_+=imm;
+                        *pc_modified=1; 
                     }
                     break;
                 }
@@ -375,6 +383,7 @@ Bit 7 → imm[11]*/
             int32_t imm= (int32_t)imm_u;
             if(rd!=0) cpu->regfile_[rd]=cpu->pc_ +4;
             cpu->pc_+=imm;
+            *pc_modified=1; 
             break;
         }
         case 0x67:{//JALR
@@ -383,11 +392,16 @@ Bit 7 → imm[11]*/
                 imm_u |=0xFFFFF000;
             }
             int32_t imm= (int32_t)imm_u;
-            if(funct3==0x0){
-            if(rd!=0) cpu->regfile_[rd]=cpu->pc_+4; 
-                cpu->pc_=(cpu->regfile_[rs1]+imm)&~1;
+            uint32_t rs1_value = cpu->regfile_[rs1];
+            uint32_t old_pc = cpu->pc_;
+            uint32_t rs1value = cpu->regfile_[rs1];
+
+            if (rd != 0) {
+                cpu->regfile_[rd] = old_pc + 4;
             }
-            
+
+            cpu->pc_ = (rs1_value + imm) & ~1;
+            *pc_modified=1; 
             break;
         }
 
@@ -459,6 +473,7 @@ Bit 7 → imm[11]*/
         switch (funct3)
         {
         case 0x0: //SB
+           // printf("SB: pc=%08X rs1=%d rs2=%d addr=%08X value=%02X\n",cpu->pc_, rs1, rs2, addr, cpu->regfile_[rs2] & 0xFF);
             CPU_store_byte(cpu, addr, (cpu->regfile_[rs2]&0xFF));
             break;
         case 0x1: { //SH
@@ -552,6 +567,7 @@ int main(int argc, char* argv[]) {
 
         uint32_t instruction_32;
         int length;
+        int pc_modified= 0;
         uint32_t old_pc=cpu_inst->pc_;
         uint16_t instruction_16 = *(uint16_t*)(cpu_inst->instr_mem_ + (cpu_inst->pc_ & 0xFFFFF));
         if((instruction_16 & 0x3)==0x3){ //nachladen da nicht compressed
@@ -562,12 +578,11 @@ int main(int argc, char* argv[]) {
         instruction_32 = expand_compressed(instruction_16);
         length=2;
         }
-    	CPU_execute(cpu_inst,instruction_32);
-        if((old_pc==cpu_inst->pc_)&& instruction_32!=0x00000000) cpu_inst->pc_+=length;
+        //printf("PC=%08X INST=%08X\n", cpu_inst->pc_, instruction_32);
+    	CPU_execute(cpu_inst,instruction_32,&pc_modified);
+        if(!pc_modified) cpu_inst->pc_+=length;
     }
-
 	printf("\n-----------------------RISC-V program terminate------------------------\nRegfile values:\n");
-
 	//output Regfile
 	for(uint32_t i = 0; i <= 31; i++) {
     	printf("%d: %X\n",i,cpu_inst->regfile_[i]);
