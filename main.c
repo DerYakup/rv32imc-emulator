@@ -96,6 +96,15 @@ uint32_t CPU_load_word(CPU* cpu, uint32_t addr){
     return word;
 }
 
+/*
+Erweitert einen n-Bit-Wert auf 32 Bit unter Beruecksichtigung
+des Vorzeichens. Bit n-1 wird als Vorzeichenbit interpretiert.
+*/
+int32_t sign_extend(uint32_t value,int n){
+uint32_t mask=1u<<(n-1);
+return(int32_t)((value^mask)-mask);
+}
+
 /**
  * Speichert ein Byte (Befehl SB) -- VORGEGEBEN, bitte nicht veraendern.
  *
