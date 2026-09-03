@@ -695,6 +695,9 @@ uint32_t expand_compressed(uint16_t c) {
             switch (funct2)
             {
             case 0x0:{ //SRLI
+                if((c>>12)&0x1){
+                        return 0;
+                    }
                 uint32_t shamt = ((c>>2) & 0x1F) | (((c>>12)&0x1)<<5);
                 uint32_t inst = (0x13) 
                 |((uint32_t)rd <<7) 
@@ -704,6 +707,9 @@ uint32_t expand_compressed(uint16_t c) {
                 return inst;
                 }
             case 0x1:{ //SRAI
+                if((c>>12)&0x1){
+                    return 0;
+                }
                 uint32_t shamt = ((c>>2) & 0x1F) | (((c>>12)&0x1)<<5);
                 uint32_t inst = (0x13) 
                 |((uint32_t)rd <<7) 
