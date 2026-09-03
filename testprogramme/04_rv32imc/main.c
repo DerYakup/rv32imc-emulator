@@ -612,7 +612,7 @@ uint32_t expand_compressed(uint16_t c) {
         if(imm==0){ //NOP
             inst =(0x13);
         }
-        else{ //ADDI
+        else{ //C.ADDI
             uint8_t rd = (c>>7)&0x1F;
             if(rd==0){
                 return 0;
@@ -645,16 +645,53 @@ uint32_t expand_compressed(uint16_t c) {
         }
             
             break;
-        case 0x2:{
+        case 0x2:{ //C.LI
+            uint32_t imm = ((c>>2) & 0x1F)|((c>>12)&0x1)<<5;
+            int32_t s_imm = sign_extend(imm,6);
+            uint8_t rd = (c>>7)&0x1F;
 
-            
+            if(rd==0){
+                return 0;
+            }
+            uint32_t inst =(0x13)|((uint32_t)rd <<7) | ((uint32_t)s_imm <<20);
+            return inst;
         }
             
             break;
-        case 0x3:
+        case 0x3:{ // C.ADDI16SP / C.LUI
+        uint8_t rd = (c>>7)&0x1F;
+        if(rd==2){ //C.ADDI16SP expandiert zu addi x2 x2 nzimm, nzimm!=0
+            uint32_t imm = (((c>>12)&0x1)<<9) 
+            | (((c>>6)&0x1)<<4)
+            |(((c>>5)&0x1)<<6)
+            |(((c>>3)&0x3)<<7)
+            |(((c>>2)&0x1)<<5);
+
+            if(imm==0){
+                return 0;
+            }
+            int32_t nzimm = sign_extend(imm,10);
+            uint32_t inst =(0x13)|(2 <<7) |(2<<15)|((uint32_t)nzimm <<20);
+            return inst;
             
-            break;
-        case 0x4:
+        }
+        else if(rd!=0){ //C.LUI expandiert zu lui  rd  nzimm, nzimm!=0 
+            uint32_t imm = (((c>>12)&0x1)<<17) | (((c>>2)&0x1F)<<12);
+            if(imm==0){
+                return 0;
+            }
+            int32_t nzimm = sign_extend(imm,18);
+            uint32_t inst = (0x37) | ((uint32_t)rd) <<7 | (uint32_t)nzimm <<12;
+            return inst;
+        }
+            return 0;
+            }
+
+
+        case 0x4:{
+
+            
+        }
             
             break;
         case 0x5:
