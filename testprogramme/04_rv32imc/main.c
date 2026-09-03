@@ -622,10 +622,33 @@ uint32_t expand_compressed(uint16_t c) {
         }
             
             return inst;}
-        case 0x1:
+        case 0x1:{ //C.JAL
+            uint32_t imm = (((c>>12)&0x1)<<11)
+            |(((c>>11)&0x1)<<4)
+            |(((c>>9)&0x3)<<8)
+            |(((c>>8)&0x1)<<10)
+            |(((c>>7)&0x1)<<6)
+            |(((c>>6)&0x1)<<7)
+            |(((c>>3)&0x7)<<1)
+            |(((c>>2)&0x1)<<5);
+
+            int32_t offset = sign_extend(imm,12);
+            uint32_t jal_imm =
+            (((uint32_t)offset >> 20) & 0x1) << 31
+            | (((uint32_t)offset >> 1)  & 0x3FF) << 21
+            | (((uint32_t)offset >> 11) & 0x1) << 20
+            | (((uint32_t)offset >> 12) & 0xFF) << 12;
+
+            uint32_t inst =(0x6F)|(1<<7)|jal_imm;
+            return inst;
+
+        }
             
             break;
-        case 0x2:
+        case 0x2:{
+
+            
+        }
             
             break;
         case 0x3:

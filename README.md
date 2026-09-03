@@ -11,3 +11,6 @@ Die ersten 5 Bits von uimm sind durch die Maske 0x60 null. Beim Verschieben um 2
 ### C.ADDI
 
 000   imm[5]   rd    imm[4:0]   01
+
+### C.JAL
+immediate muss neuangeordnet werden, weil das imm bei JAL anders zusammen gesetzt werden.
