@@ -596,11 +596,56 @@ uint32_t expand_compressed(uint16_t c) {
             |((uimm &0x60) << 20);
             return inst;
             }
+            default:
+                return 0;
         }
         
         break;
     }
     case 0x1: //Quadrant 1
+        switch (funct3)
+        {
+        case 0x0:{
+        uint32_t imm = (((c>>12)&0x1)<<5) | ((c>> 2)&0x1F);
+        uint32_t inst=0;
+
+        if(imm==0){ //NOP
+            inst =(0x13);
+        }
+        else{ //ADDI
+            uint8_t rd = (c>>7)&0x1F;
+            if(rd==0){
+                return 0;
+            }
+            int32_t nzimm = sign_extend(imm,6);
+            inst =(0x13)|((uint32_t)rd <<7) |((uint32_t)rd<<15)|((uint32_t)nzimm <<20);
+        }
+            
+            return inst;}
+        case 0x1:
+            
+            break;
+        case 0x2:
+            
+            break;
+        case 0x3:
+            
+            break;
+        case 0x4:
+            
+            break;
+        case 0x5:
+            
+            break;
+        case 0x6:
+            
+            break;
+        case 0x7:
+            
+            break;
+        default:
+            return 0;
+        }
         
         break;
     case 0x2: //Quadrant 2
