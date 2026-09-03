@@ -772,18 +772,45 @@ uint32_t expand_compressed(uint16_t c) {
                 }
                 break;}
             }
+        }   
+        case 0x5:{ // C.J
+        uint32_t imm = ((c>>12)&0x1)<<11 | ((c>>11)&0x1)<<4 
+        | ((c>>9)&0x3)<<8 | ((c>>8)&0x1)<<10 | ((c>>7)&0x1)<<6 
+        | ((c>>6)&0x1)<<7 | ((c>>3)&0x7)<<1 | ((c>>2)&0x1)<<5;
+        int32_t offset= sign_extend(imm,12);
+        //jal 0x6F x0 offset
+        uint32_t jal_imm =
+            (((uint32_t)offset >> 20) & 0x1) << 31
+            | (((uint32_t)offset >> 1)  & 0x3FF) << 21
+            | (((uint32_t)offset >> 11) & 0x1) << 20
+            | (((uint32_t)offset >> 12) & 0xFF) << 12;
+        uint32_t inst = (0x6F) | jal_imm;
+        return inst;
         }
-            
-            break;
-        case 0x5:
-            
-            break;
-        case 0x6:
-            
-            break;
-        case 0x7:
-            
-            break;
+        case 0x6:{ //BEQZ
+            uint8_t rs1 = ((c >> 7) & 0x7) + 8;
+            uint32_t imm = ((c>>12)&0x1)<<8 | ((c>>10)&0x3)<<3 | ((c>>5)&0x3)<<6 | ((c>>3)&0x3)<<1 | ((c>>2)&0x1)<<5;
+            int32_t offset = sign_extend(imm,9);
+            uint32_t beq_imm =
+            (((uint32_t)offset >> 12) & 0x1) << 31
+            | (((uint32_t)offset >> 5) & 0x3F) << 25
+            | (((uint32_t)offset >> 1) & 0xF) << 8
+            | (((uint32_t)offset >> 11) & 0x1) << 7;
+            uint32_t inst = (0x63) |((uint32_t)rs1)<<15| beq_imm;
+            return inst;
+        }
+        case 0x7:{ //BNE
+            uint8_t rs1 = ((c >> 7) & 0x7) + 8;
+            uint32_t imm = ((c>>12)&0x1)<<8 | ((c>>10)&0x3)<<3 | ((c>>5)&0x3)<<6 | ((c>>3)&0x3)<<1 | ((c>>2)&0x1)<<5;
+            int32_t offset = sign_extend(imm,9);
+            uint32_t bne_imm =
+            (((uint32_t)offset >> 12) & 0x1) << 31
+            | (((uint32_t)offset >> 5) & 0x3F) << 25
+            | (((uint32_t)offset >> 1) & 0xF) << 8
+            | (((uint32_t)offset >> 11) & 0x1) << 7;
+            //beqz rs' x0 offset
+            uint32_t inst = (0x63) |((uint32_t)rs1)<<15|(0x1<<12)| bne_imm;
+            return inst;}
         default:
             return 0;
         }
