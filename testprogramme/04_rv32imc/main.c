@@ -688,9 +688,84 @@ uint32_t expand_compressed(uint16_t c) {
             }
 
 
-        case 0x4:{
+        case 0x4:{ //SRLI SRAI ANDI SUB XOR OR AND 
+            uint8_t funct2 = (c>>10)&0x3;
+            uint8_t rd = ((c >> 7) & 0x7) + 8;
 
-            
+            switch (funct2)
+            {
+            case 0x0:{ //SRLI
+                uint32_t shamt = ((c>>2) & 0x1F) | (((c>>12)&0x1)<<5);
+                uint32_t inst = (0x13) 
+                |((uint32_t)rd <<7) 
+                |((0x5)<<12)
+                |((uint32_t)rd <<15)
+                |((uint32_t)shamt <<20);
+                return inst;
+                }
+            case 0x1:{ //SRAI
+                uint32_t shamt = ((c>>2) & 0x1F) | (((c>>12)&0x1)<<5);
+                uint32_t inst = (0x13) 
+                |((uint32_t)rd <<7) 
+                |((0x5)<<12)
+                |((uint32_t)rd <<15)
+                |((uint32_t)shamt <<20)
+                |(0x20<<25);
+                
+                return inst;
+                }
+            case 0x2:{ //ANDI
+                uint32_t imm = ((c>>2) & 0x1F) | (((c>>12)&0x1)<<5);
+                int32_t s_imm = sign_extend(imm,6);
+                uint32_t inst = (0x13) 
+                |((uint32_t)rd<<7)
+                |((0x7)<<12)
+                |((uint32_t)rd <<15)
+                |((uint32_t)s_imm <<20);
+                
+                return inst;
+                }
+            case 0x3:{ // sub xor or and  -> alle haben bei [11:10] 11 
+                funct2 = (c>>5)&0x3;
+                uint8_t rs2 = ((c >> 2) & 0x7) + 8;
+                switch (funct2)
+                {
+                case 0x0:{ //SUB
+                    uint32_t inst = (0x33) 
+                    | (uint32_t)rd <<7
+                    | (0<<12)
+                    | (uint32_t)rd <<15
+                    | (uint32_t)rs2 <<20
+                    | 0x20 <<25;
+                    return inst;
+                }
+                case 0x1:{ //XOR
+                    uint32_t inst = (0x33) 
+                    | (uint32_t)rd <<7
+                    | (0x4<<12)
+                    | (uint32_t)rd <<15
+                    | (uint32_t)rs2 <<20;
+                    return inst;
+                }
+                case 0x2:{ //OR
+                    uint32_t inst = (0x33) 
+                    | (uint32_t)rd <<7
+                    | (0x6<<12)
+                    | (uint32_t)rd <<15
+                    | (uint32_t)rs2 <<20;
+                    return inst;
+                }
+                case 0x3:{ //AND
+                    uint32_t inst = (0x33) 
+                    | (uint32_t)rd <<7
+                    | (0x7<<12)
+                    | (uint32_t)rd <<15
+                    | (uint32_t)rs2 <<20;
+                    return inst;
+                }               
+                }
+                break;}
+            }
         }
             
             break;
