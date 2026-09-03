@@ -540,22 +540,66 @@ uint32_t expand_compressed(uint16_t c) {
     uint8_t funct3 = (c >> 13) & 0x7; // funct3 ueber alle Quadranten
     switch (op)
     {
-    case 0x0: //Quadrant 0
+    case 0x0: {//Quadrant 0
         switch (funct3)
         {
-        case 0x0:
+        case 0x0:{ //ADDI4SPN addi rd', x2 , nzuimm
+            uint8_t rd = ((c >> 2) & 0x7) + 8;
+            uint16_t nzuimm = (((c>>6)&0x1)<<2)
+            |(((c>>5)&0x1)<< 3)
+            |(((c>>7)&0xF)<<6)
+            |(((c>>11)&0x3)<<4);
+            if(nzuimm==0){
+                return 0;
+            }
+            // 0-6 opcode, 
+            uint32_t inst = (0x13)
+            |(rd<<7)
+            |(0<<12)
+            |(2<<15)
+            |(nzuimm<<20);
             
-            return 0;
-        case 0x2:
+            return inst;
+            }
             
-            return 0;
-        case 0x6:
-            
-            return 0;
+        case 0x2: // C.LW
+            {
+            uint8_t rd = ((c >> 2) & 0x7) + 8; // rd’ aus inst[4:2]
+            uint8_t rs1 = ((c >> 7) & 0x7) + 8; // rs1’ aus inst[9:7]
+            // uimm aus den verstreuten Bits zusammensetzen (keine Vorzeichenerw.):
+            uint32_t uimm = ((c >> 7) & 0x38)
+            | ((c >> 4) & 0x04)
+            | ((c << 1) & 0x40);
+            // uimm[5:3] = inst[12:10]
+            // uimm[2] = inst[6]
+            // uimm[6] = inst[5]
+            // 32-Bit-LW zusammensetzen: imm[11:0] | rs1 | funct3 | rd | opcode
+            uint32_t inst = (uimm<< 20) // imm[11:0]-> Bits 31:20
+            | ((uint32_t)rs1 << 15) // rs1-> Bits 19:15
+            | (0x2u<< 12) // funct3 = 010 (LW)
+            | ((uint32_t)rd << 7) // rd-> Bits 11:7
+            | 0x03u;
+            // opcode = 0000011 (LOAD)
+            return inst;
+            }
+        case 0x6: {// C.SW
+            uint8_t rs2 = ((c >> 2) & 0x7) + 8;
+            uint8_t rs1 = ((c >> 7) & 0x7) + 8;
+            uint32_t uimm = ((c >> 7) & 0x38)
+            | ((c >> 4) & 0x04)
+            | ((c << 1) & 0x40);
+            uint32_t inst= (0x23)
+            |((uimm &0x1F) << 7)
+            | (0x2 << 12)
+            |((uint32_t)rs1 << 15)
+            |((uint32_t)rs2 << 20)
+            |((uimm &0x60) << 20);
+            return inst;
+            }
         }
         
         break;
-
+    }
     case 0x1: //Quadrant 1
         
         break;
