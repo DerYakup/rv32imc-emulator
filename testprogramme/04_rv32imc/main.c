@@ -345,7 +345,6 @@ case 0x33: { // R-Type
                 else {
                     *invalid = 1;
                 }
-
                 break;
             }
 
@@ -665,20 +664,19 @@ uint32_t expand_compressed(uint16_t c) {
         {
         case 0x0:{
         uint32_t imm = (((c>>12)&0x1)<<5) | ((c>> 2)&0x1F);
-        uint32_t inst=0;
+        uint8_t rd = (c>>7)&0x1F;
 
-        if(imm==0){ //NOP
-            inst =(0x13);
+        if(rd==0&&imm==0){ //NOP
+            return 0x13;
         }
-        else{ //C.ADDI
-            uint8_t rd = (c>>7)&0x1F;
-            if(rd==0){
-                return 0;
-            }
+         if(imm==0||rd==0){
+            return 0;
+            } 
+            //C.ADDI
+   
             int32_t nzimm = sign_extend(imm,6);
-            inst =(0x13)|((uint32_t)rd <<7) |((uint32_t)rd<<15)|((uint32_t)nzimm <<20);
-        }   
-            return inst;}
+            return (0x13)|((uint32_t)rd <<7) |((uint32_t)rd<<15)|((uint32_t)nzimm <<20);
+         }
             
         case 0x1:{ //C.JAL
             uint32_t imm = (((c>>12)&0x1)<<11) | (((c>>11)&0x1)<<4) | (((c>>9)&0x3)<<8) |(((c>>8)&0x1)<<10)
