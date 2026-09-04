@@ -134,7 +134,8 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
                         break;
                         }
                     case 0x1 : {//SLLI
-                        cpu->regfile_[rd] = cpu->regfile_[rs1] << (imm & 0x1F);
+                        if(funct7==0){cpu->regfile_[rd] = cpu->regfile_[rs1] << (imm & 0x1F);}
+                        else{*invalid=1;}
                         break;
                     }
                     case 0x2 : {//SLTI
@@ -156,6 +157,7 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
                         else if(0x20 == ((imm_u>>5)&0x7F)){
                             cpu->regfile_[rd]=(int32_t)(cpu->regfile_[rs1])>>(imm & 0x1F);
                         }
+                        else{*invalid=1;}
                     break;
                     }
                     case 0x6:{ //ORI
@@ -239,49 +241,142 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
                 }
             }
             else{
-            switch (funct3)
-            {
-            case 0x0:{
-                if(funct7==0) //ADD
-                    cpu->regfile_[rd]= cpu->regfile_[rs1]+ cpu->regfile_[rs2];
-                else if (funct7==0x20) //SUB
-                    cpu->regfile_[rd]=cpu->regfile_[rs1] - cpu->regfile_[rs2];
-                break;
+    switch (funct3)
+    {
+        case 0x0: { // ADD / SUB
+
+            if (funct7 == 0x00) { // ADD
+                if (rd != 0) {
+                    cpu->regfile_[rd] =cpu->regfile_[rs1] + cpu->regfile_[rs2];
+                }
             }
-            case 0x1:{ //SLL
-                cpu->regfile_[rd]=cpu->regfile_[rs1]<< (cpu->regfile_[rs2]&0x1F);
-                break;
+            else if (funct7 == 0x20) { // SUB
+                if (rd != 0) {cpu->regfile_[rd] =cpu->regfile_[rs1] - cpu->regfile_[rs2];
             }
-            case 0x2:{ //SLT
-                cpu->regfile_[rd]=(int32_t)(cpu->regfile_[rs1])< (int32_t)(cpu->regfile_[rs2]);
-                break;
+            else {
+                *invalid = 1;
             }
-            case 0x3:{ //SLTU
-                cpu->regfile_[rd]= cpu->regfile_[rs1] < cpu->regfile_[rs2];
-                break;
+
+            break;
+        }
+
+        case 0x1: { // SLL
+
+            if (funct7 == 0x00) {
+                if (rd != 0) {
+                    cpu->regfile_[rd] =
+                        cpu->regfile_[rs1] <<
+                        (cpu->regfile_[rs2] & 0x1F);
+                }
             }
-            case 0x4:{ //XOR
-                cpu->regfile_[rd]=cpu->regfile_[rs1]^cpu->regfile_[rs2];
-                break;
+            else {
+                *invalid = 1;
             }
-            case 0x5:{ //SRL /SRA
-                if(funct7==0x0) //SRL
-                    cpu->regfile_[rd]= cpu->regfile_[rs1] >> (cpu->regfile_[rs2]&0x1F);
-                else if(funct7==0x20) //SRA
-                    cpu->regfile_[rd]= (int32_t)(cpu->regfile_[rs1]) >> (cpu->regfile_[rs2]&0x1F);
-                break;
+
+            break;
+        }
+
+        case 0x2: { // SLT
+
+            if (funct7 == 0x00) {
+                if (rd != 0) {
+                    cpu->regfile_[rd] =
+                        ((int32_t)cpu->regfile_[rs1] <
+                         (int32_t)cpu->regfile_[rs2]);
+                }
             }
-            case 0x6:{ //OR
-                cpu->regfile_[rd] = cpu->regfile_[rs1] | cpu->regfile_[rs2];
-                break;
+            else {
+                *invalid = 1;
             }
-            case 0x7:{ //AND
-                cpu->regfile_[rd] = cpu->regfile_[rs1] & cpu->regfile_[rs2];
-                break;
+
+            break;
+        }
+
+        case 0x3: { // SLTU
+
+            if (funct7 == 0x00) {
+                if (rd != 0) {
+                    cpu->regfile_[rd] =
+                        cpu->regfile_[rs1] < cpu->regfile_[rs2];
+                }
             }
-            default:
-                break;
+            else {
+                *invalid = 1;
             }
+
+            break;
+        }
+
+        case 0x4: { // XOR
+
+            if (funct7 == 0x00) {
+                if (rd != 0) {
+                    cpu->regfile_[rd] =
+                        cpu->regfile_[rs1] ^ cpu->regfile_[rs2];
+                }
+            }
+            else {
+                *invalid = 1;
+            }
+
+            break;
+        }
+case 0x5: { // SRL / SRA
+
+            if (funct7 == 0x00) { // SRL
+                if (rd != 0) {
+                    cpu->regfile_[rd] =cpu->regfile_[rs1] >>(cpu->regfile_[rs2] & 0x1F);
+                }
+            }
+            else if (funct7 == 0x20) { // SRA
+                if (rd != 0) {
+                    cpu->regfile_[rd] =
+                        (int32_t)cpu->regfile_[rs1] >>
+                        (cpu->regfile_[rs2] & 0x1F);
+                }
+            }
+            else {
+                *invalid = 1;
+            }
+
+            break;
+        }
+
+        case 0x6: { // OR
+
+            if (funct7 == 0x00) {
+                if (rd != 0) {
+                    cpu->regfile_[rd] =
+                        cpu->regfile_[rs1] | cpu->regfile_[rs2];
+                }
+            }
+            else {
+                *invalid = 1;
+            }
+
+            break;
+        }
+
+        case 0x7: { // AND
+
+            if (funct7 == 0x00) {
+                if (rd != 0) {
+                    cpu->regfile_[rd] =
+                        cpu->regfile_[rs1] & cpu->regfile_[rs2];
+                }
+            }
+            else {
+                *invalid = 1;
+            }
+            break;
+        }
+        default: {
+            *invalid = 1;
+            break;
+        }
+    }
+    break;
+    }
         }
         }
         break;
@@ -344,8 +439,9 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
                     }
                     break;
                 }
-                default:
-                    break;
+                default:{
+                    *invalid=1;
+                    break;}
                 }          
             break;
         }
@@ -362,6 +458,10 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
             break;
         }
         case 0x67:{//JALR
+            if(funct3!=0){
+                *invalid =1;
+                break;
+            }
             uint32_t imm_u = (instruction >> 20) & 0xFFF;
             if(imm_u & 0x800){
                 imm_u |=0xFFFFF000;
