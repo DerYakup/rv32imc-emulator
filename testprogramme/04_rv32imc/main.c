@@ -398,15 +398,12 @@ Bit 7 → imm[11]*/
             int32_t imm= (int32_t)imm_u;
             uint32_t rs1_value = cpu->regfile_[rs1];
             uint32_t old_pc = cpu->pc_;
-            //printf("JALR: pc=%08X rs1=%d rs1value=%08X imm=%d rd=%d length=%d\n",
-     //  cpu->pc_,rs1,cpu->regfile_[rs1],imm,rd, length);
 
             if (rd != 0) {
                 cpu->regfile_[rd] = old_pc + length;
             }
             cpu->pc_ = (rs1_value + imm) & ~1;
             *pc_modified=1; 
-           // printf("JALR TARGET = %08X\n", cpu->pc_);
             break;
         }
 
@@ -439,19 +436,12 @@ Bit 7 → imm[11]*/
                 }
                 case 0x2:{ // LW
                     value= CPU_load_word(cpu, addr);
-                  //  if (cpu->pc_ == 0x3C) {
-                   //  printf(">>> LW 0x3C: addr=%08X value=%08X\n", addr, value);
-                 //    }
-                    
                     break;
                 }
                 case 0x4: {//LBU
                     uint8_t value_8 = CPU_load_byte(cpu, addr);
 
                     value= value_8;
-                  // if (cpu->pc_ == 0x54) {
-                   // printf(">>> LBU: addr=%08X value=%02X\n", addr, value_8);
-                   // }
                     break;
                     }
 
@@ -486,7 +476,6 @@ Bit 7 → imm[11]*/
         switch (funct3)
         {
         case 0x0: //SB
-           // printf("SB: pc=%08X rs1=%d rs2=%d addr=%08X value=%02X\n",cpu->pc_, rs1, rs2, addr, cpu->regfile_[rs2] & 0xFF);
             CPU_store_byte(cpu, addr, (cpu->regfile_[rs2]&0xFF));
             break;
         case 0x1: { //SH
@@ -882,8 +871,6 @@ uint32_t expand_compressed(uint16_t c) {
             uint8_t rs2 = (c>>2)&0x1F;
             uint32_t uimm = ((c>>9)&0xF)<<2 | ((c>>7)&0x3)<<6;
             uint32_t inst = (0x23) | ((uimm & 0x1F)<<7)|(0x2 << 12)| (2<<15)  | (((uint32_t)rs2)<<20)| ((uimm>>5)<<25);
-          //  printf("SWSP DEBUG: c=%04X rs2=%d uimm=%08X inst=%08X\n",
-          // c, rs2, uimm, inst);
             return inst;
             }
         }
@@ -904,12 +891,7 @@ int main(int argc, char* argv[]) {
         int pc_modified= 0;
         int invalid=0;
         uint32_t old_pc=cpu_inst->pc_;
-       // printf("PC=%08X BYTE0=%02X BYTE1=%02X\n",
-       //cpu_inst->pc_,
-      // cpu_inst->instr_mem_[cpu_inst->pc_ & 0xFFFFF],
-       //cpu_inst->instr_mem_[(cpu_inst->pc_ & 0xFFFFF) + 1]); 
         uint16_t instruction_16 = *(uint16_t*)(cpu_inst->instr_mem_ + (cpu_inst->pc_ & 0xFFFFF));
-        //printf("PC=%08X instruction16=%04X\n",cpu_inst->pc_, instruction_16);
         if((instruction_16 & 0x3)==0x3){ //nachladen da nicht compressed
             instruction_32 = (uint32_t)(*(uint16_t*)(cpu_inst->instr_mem_ + ((cpu_inst->pc_+2) & 0xFFFFF)))<<16|instruction_16;
             length=4;
@@ -917,19 +899,13 @@ int main(int argc, char* argv[]) {
         
         else{ //16 bit Anweisung
             if (instruction_16 == 0x9002) {
-                break;  // C.EBREAK → Emulator beenden
+                break;  // C.EBREAK 
     }
             instruction_32 = expand_compressed(instruction_16);
             length=2;
         }
-           //printf(" INSTRUCTION at PC = %08X, INST = %08X\n",
-       //    old_pc, instruction_32);
         if((invalid) || instruction_32==0) {
-         //   printf("INVALID INSTRUCTION at PC = %08X, INST = %08X\n",
-        //  old_pc, instruction_32);
              break;
-
-
         }
     	CPU_execute(cpu_inst,instruction_32,&pc_modified,&invalid,length);
         if(!pc_modified) cpu_inst->pc_+=length;
