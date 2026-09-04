@@ -255,8 +255,7 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
                         cpu->regfile_[rd]=cpu->regfile_[rs1]%cpu->regfile_[rs2];
                     }
                     break;
-                }
-                     
+                }        
                 default:
                     break;
                 }
@@ -310,11 +309,6 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
         break;
         }
 
-/*
-Bit 31 → imm[12] 
-Bits 30–25 → imm[10:5]
-Bits 11–8 → imm[4:1]
-Bit 7 → imm[11]*/
         case 0x63: { //B-Type
                 uint32_t imm_u= ((instruction >> 31) & 0x1) << 12  | ((instruction >> 25) & 0x3F) << 5 | ((instruction >> 8) & 0xF) << 1 | ((instruction >>7)& 0x1)<<11 ;
                 if(imm_u&0x1000){
@@ -407,7 +401,6 @@ Bit 7 → imm[11]*/
             break;
         }
 
-    /*Immediate  Bits 31–20 → imm[11:0] */
         case 0x03: { // L-Type
             uint32_t imm_u=((instruction>>20)&0xFFF);
                 if(imm_u&0x800){
@@ -459,11 +452,6 @@ Bit 7 → imm[11]*/
             break;
         }
 
-/*Immediate Bits
-31-25-> imm [11:5]
-11-7 -> imm[4:0]
-
-*/
     case 0x23: { // SW / SB
 
         uint32_t imm_u= ((instruction>>25)&0x7F)<<5 | ((instruction>>7)&0x1F);
@@ -520,8 +508,6 @@ Bit 7 → imm[11]*/
 	// Hinweis zur Zeichenausgabe: Verwenden Sie fuer den Befehl SB die bereits
 	// vorgegebene Funktion CPU_store_byte(). So erscheinen Schreibzugriffe auf
 	// die Adresse 0x5000 als Zeichenausgabe auf dem Terminal.
-
-
 }
 
 /*
@@ -539,20 +525,11 @@ uint32_t expand_compressed(uint16_t c) {
         {
         case 0x0:{ //ADDI4SPN addi rd', x2 , nzuimm
             uint8_t rd = ((c >> 2) & 0x7) + 8;
-            uint16_t nzuimm = (((c>>6)&0x1)<<2)
-            |(((c>>5)&0x1)<< 3)
-            |(((c>>7)&0xF)<<6)
-            |(((c>>11)&0x3)<<4);
+            uint16_t nzuimm = (((c>>6)&0x1)<<2)|(((c>>5)&0x1)<< 3) |(((c>>7)&0xF)<<6)|(((c>>11)&0x3)<<4);
             if(nzuimm==0){
                 return 0;
             }
-            // 0-6 opcode, 
-            uint32_t inst = (0x13)
-            |(rd<<7)
-            |(0<<12)
-            |(2<<15)
-            |(nzuimm<<20);
-            
+            uint32_t inst = (0x13)|(rd<<7) |(0<<12)|(2<<15)|(nzuimm<<20);
             return inst;
             }
             
@@ -579,22 +556,14 @@ uint32_t expand_compressed(uint16_t c) {
         case 0x6: {// C.SW
             uint8_t rs2 = ((c >> 2) & 0x7) + 8;
             uint8_t rs1 = ((c >> 7) & 0x7) + 8;
-            uint32_t uimm = ((c >> 7) & 0x38)
-            | ((c >> 4) & 0x04)
-            | ((c << 1) & 0x40);
+            uint32_t uimm = ((c >> 7) & 0x38) | ((c >> 4) & 0x04) | ((c << 1) & 0x40);
             uint32_t inst= (0x23)
-            |((uimm &0x1F) << 7)
-            | (0x2 << 12)
-            |((uint32_t)rs1 << 15)
-            |((uint32_t)rs2 << 20)
-            |((uimm &0x60) << 20);
+            |((uimm &0x1F) << 7) | (0x2 << 12)|((uint32_t)rs1 << 15) |((uint32_t)rs2 << 20)|((uimm &0x60) << 20);
             return inst;
             }
             default:
                 return 0;
         }
-        
-        break;
     }
     case 0x1: //Quadrant 1
         switch (funct3)
@@ -613,40 +582,27 @@ uint32_t expand_compressed(uint16_t c) {
             }
             int32_t nzimm = sign_extend(imm,6);
             inst =(0x13)|((uint32_t)rd <<7) |((uint32_t)rd<<15)|((uint32_t)nzimm <<20);
-        }
-            
+        }   
             return inst;}
+            
         case 0x1:{ //C.JAL
-            uint32_t imm = (((c>>12)&0x1)<<11)
-            |(((c>>11)&0x1)<<4)
-            |(((c>>9)&0x3)<<8)
-            |(((c>>8)&0x1)<<10)
-            |(((c>>7)&0x1)<<6)
-            |(((c>>6)&0x1)<<7)
-            |(((c>>3)&0x7)<<1)
-            |(((c>>2)&0x1)<<5);
+            uint32_t imm = (((c>>12)&0x1)<<11) | (((c>>11)&0x1)<<4) | (((c>>9)&0x3)<<8) |(((c>>8)&0x1)<<10)
+            | (((c>>7)&0x1)<<6) | (((c>>6)&0x1)<<7) | (((c>>3)&0x7)<<1) | (((c>>2)&0x1)<<5);
 
             int32_t offset = sign_extend(imm,12);
             uint32_t jal_imm =
-            (((uint32_t)offset >> 20) & 0x1) << 31
-            | (((uint32_t)offset >> 1)  & 0x3FF) << 21
-            | (((uint32_t)offset >> 11) & 0x1) << 20
-            | (((uint32_t)offset >> 12) & 0xFF) << 12;
+            (((uint32_t)offset >> 20) & 0x1) << 31| (((uint32_t)offset >> 1)  & 0x3FF) << 21
+            | (((uint32_t)offset >> 11) & 0x1) << 20| (((uint32_t)offset >> 12) & 0xFF) << 12;
 
             uint32_t inst =(0x6F)|(1<<7)|jal_imm;
             return inst;
-
         }
-            
-            break;
+
         case 0x2:{ //C.LI
             uint32_t imm = ((c>>2) & 0x1F)|((c>>12)&0x1)<<5;
             int32_t s_imm = sign_extend(imm,6);
             uint8_t rd = (c>>7)&0x1F;
-
-            if(rd==0){
-                return 0;
-            }
+            if(rd==0){ return 0;}
             uint32_t inst =(0x13)|((uint32_t)rd <<7) | ((uint32_t)s_imm <<20);
             return inst;
         }
@@ -655,11 +611,7 @@ uint32_t expand_compressed(uint16_t c) {
         case 0x3:{ // C.ADDI16SP / C.LUI
         uint8_t rd = (c>>7)&0x1F;
         if(rd==2){ //C.ADDI16SP expandiert zu addi x2 x2 nzimm, nzimm!=0
-            uint32_t imm = (((c>>12)&0x1)<<9) 
-            | (((c>>6)&0x1)<<4)
-            |(((c>>5)&0x1)<<6)
-            |(((c>>3)&0x3)<<7)
-            |(((c>>2)&0x1)<<5);
+            uint32_t imm = (((c>>12)&0x1)<<9) | (((c>>6)&0x1)<<4)|(((c>>5)&0x1)<<6)|(((c>>3)&0x3)<<7)|(((c>>2)&0x1)<<5);
 
             if(imm==0){
                 return 0;
@@ -671,9 +623,7 @@ uint32_t expand_compressed(uint16_t c) {
         }
         else if(rd!=0){ //C.LUI expandiert zu lui  rd  nzimm, nzimm!=0 
             uint32_t imm = (((c>>12)&0x1)<<17) | (((c>>2)&0x1F)<<12);
-            if(imm==0){
-                return 0;
-            }
+            if(imm==0){ return 0; }
             int32_t nzimm = sign_extend(imm,18);
             uint32_t inst = (0x37) | ((uint32_t)rd) <<7 | (uint32_t)nzimm;
             return inst;
@@ -689,40 +639,22 @@ uint32_t expand_compressed(uint16_t c) {
             switch (funct2)
             {
             case 0x0:{ //SRLI
-                if((c>>12)&0x1){
-                        return 0;
-                    }
+                if((c>>12)&0x1){return 0;}
                 uint32_t shamt = ((c>>2) & 0x1F) | (((c>>12)&0x1)<<5);
-                uint32_t inst = (0x13) 
-                |((uint32_t)rd <<7) 
-                |((0x5)<<12)
-                |((uint32_t)rd <<15)
-                |((uint32_t)shamt <<20);
+                uint32_t inst = (0x13) |((uint32_t)rd <<7) |((0x5)<<12) |((uint32_t)rd <<15)|((uint32_t)shamt <<20);
                 return inst;
                 }
             case 0x1:{ //SRAI
-                if((c>>12)&0x1){
-                    return 0;
-                }
+                if((c>>12)&0x1){return 0; }
                 uint32_t shamt = ((c>>2) & 0x1F) | (((c>>12)&0x1)<<5);
-                uint32_t inst = (0x13) 
-                |((uint32_t)rd <<7) 
-                |((0x5)<<12)
-                |((uint32_t)rd <<15)
-                |((uint32_t)shamt <<20)
-                |(0x20<<25);
+                uint32_t inst = (0x13) |((uint32_t)rd <<7) |((0x5)<<12)|((uint32_t)rd <<15)|((uint32_t)shamt <<20) |(0x20<<25);
                 
                 return inst;
                 }
             case 0x2:{ //ANDI
                 uint32_t imm = ((c>>2) & 0x1F) | (((c>>12)&0x1)<<5);
                 int32_t s_imm = sign_extend(imm,6);
-                uint32_t inst = (0x13) 
-                |((uint32_t)rd<<7)
-                |((0x7)<<12)
-                |((uint32_t)rd <<15)
-                |((uint32_t)s_imm <<20);
-                
+                uint32_t inst = (0x13) | ((uint32_t)rd<<7) | ((0x7)<<12) |((uint32_t)rd <<15) | ((uint32_t)s_imm <<20);
                 return inst;
                 }
             case 0x3:{ // sub xor or and  -> alle haben bei [11:10] 11 
@@ -731,36 +663,19 @@ uint32_t expand_compressed(uint16_t c) {
                 switch (funct2)
                 {
                 case 0x0:{ //SUB
-                    uint32_t inst = (0x33) 
-                    | (uint32_t)rd <<7
-                    | (0<<12)
-                    | (uint32_t)rd <<15
-                    | (uint32_t)rs2 <<20
-                    | 0x20 <<25;
+                    uint32_t inst = (0x33) | (uint32_t)rd <<7 | (0<<12)| (uint32_t)rd <<15 | (uint32_t)rs2 <<20 | 0x20 <<25;
                     return inst;
                 }
                 case 0x1:{ //XOR
-                    uint32_t inst = (0x33) 
-                    | (uint32_t)rd <<7
-                    | (0x4<<12)
-                    | (uint32_t)rd <<15
-                    | (uint32_t)rs2 <<20;
+                    uint32_t inst = (0x33) | (uint32_t)rd <<7 | (0x4<<12)| (uint32_t)rd <<15 | (uint32_t)rs2 <<20;
                     return inst;
                 }
                 case 0x2:{ //OR
-                    uint32_t inst = (0x33) 
-                    | (uint32_t)rd <<7
-                    | (0x6<<12)
-                    | (uint32_t)rd <<15
-                    | (uint32_t)rs2 <<20;
+                    uint32_t inst = (0x33) | (uint32_t)rd <<7 | (0x6<<12) | (uint32_t)rd <<15 | (uint32_t)rs2 <<20;
                     return inst;
                 }
                 case 0x3:{ //AND
-                    uint32_t inst = (0x33) 
-                    | (uint32_t)rd <<7
-                    | (0x7<<12)
-                    | (uint32_t)rd <<15
-                    | (uint32_t)rs2 <<20;
+                    uint32_t inst = (0x33) | (uint32_t)rd <<7 | (0x7<<12) | (uint32_t)rd <<15 | (uint32_t)rs2 <<20;
                     return inst;
                 }               
                 }
@@ -774,10 +689,8 @@ uint32_t expand_compressed(uint16_t c) {
         int32_t offset= sign_extend(imm,12);
         //jal 0x6F x0 offset
         uint32_t jal_imm =
-            (((uint32_t)offset >> 20) & 0x1) << 31
-            | (((uint32_t)offset >> 1)  & 0x3FF) << 21
-            | (((uint32_t)offset >> 11) & 0x1) << 20
-            | (((uint32_t)offset >> 12) & 0xFF) << 12;
+            (((uint32_t)offset >> 20) & 0x1) << 31| (((uint32_t)offset >> 1)  & 0x3FF) << 21 
+            | (((uint32_t)offset >> 11) & 0x1) << 20| (((uint32_t)offset >> 12) & 0xFF) << 12;
         uint32_t inst = (0x6F) | jal_imm;
         return inst;
         }
@@ -786,10 +699,8 @@ uint32_t expand_compressed(uint16_t c) {
             uint32_t imm = ((c>>12)&0x1)<<8 | ((c>>10)&0x3)<<3 | ((c>>5)&0x3)<<6 | ((c>>3)&0x3)<<1 | ((c>>2)&0x1)<<5;
             int32_t offset = sign_extend(imm,9);
             uint32_t beq_imm =
-            (((uint32_t)offset >> 12) & 0x1) << 31
-            | (((uint32_t)offset >> 5) & 0x3F) << 25
-            | (((uint32_t)offset >> 1) & 0xF) << 8
-            | (((uint32_t)offset >> 11) & 0x1) << 7;
+            (((uint32_t)offset >> 12) & 0x1) << 31 | (((uint32_t)offset >> 5) & 0x3F) << 25
+            | (((uint32_t)offset >> 1) & 0xF) << 8 | (((uint32_t)offset >> 11) & 0x1) << 7;
             uint32_t inst = (0x63) |((uint32_t)rs1)<<15| beq_imm;
             return inst;
         }
@@ -798,10 +709,8 @@ uint32_t expand_compressed(uint16_t c) {
             uint32_t imm = ((c>>12)&0x1)<<8 | ((c>>10)&0x3)<<3 | ((c>>5)&0x3)<<6 | ((c>>3)&0x3)<<1 | ((c>>2)&0x1)<<5;
             int32_t offset = sign_extend(imm,9);
             uint32_t bne_imm =
-            (((uint32_t)offset >> 12) & 0x1) << 31
-            | (((uint32_t)offset >> 5) & 0x3F) << 25
-            | (((uint32_t)offset >> 1) & 0xF) << 8
-            | (((uint32_t)offset >> 11) & 0x1) << 7;
+            (((uint32_t)offset >> 12) & 0x1) << 31 | (((uint32_t)offset >> 5) & 0x3F) << 25
+            | (((uint32_t)offset >> 1) & 0xF) << 8 | (((uint32_t)offset >> 11) & 0x1) << 7;
             //beqz rs' x0 offset
             uint32_t inst = (0x63) |((uint32_t)rs1)<<15|(0x1<<12)| bne_imm;
             return inst;}
@@ -835,7 +744,7 @@ uint32_t expand_compressed(uint16_t c) {
             uint8_t bit12 = (c>>12)&0x1;
             if(bit12== 0){
                 uint8_t rs1 = (c>>7)&0x1F;
-                if(rs1==0) return 0;
+                if(rs1==0) {return 0;}
                 uint32_t inst = 0;
                 uint8_t rs2 = (c>>2)&0x1F;
                 if(rs2==0){ // JR jalr x0 0(rs1)
@@ -853,9 +762,7 @@ uint32_t expand_compressed(uint16_t c) {
                 uint8_t rs1 = (c>>7)&0x1F;
                 uint32_t inst = 0;
                 uint8_t rs2 = (c>>2)&0x1F;
-                if(rs1==0 && rs2==0){ // ebreak
-                    return 0;
-                }
+                if(rs1==0 && rs2==0){ return 0;  } //ebreak
                 else if(rs1!=0 &&rs2==0){ //JALR
                     inst = (0x67) | (1<<7) | (((uint32_t)rs1)<<15);
                 }
