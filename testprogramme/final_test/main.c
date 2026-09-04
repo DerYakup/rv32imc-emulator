@@ -630,8 +630,6 @@ uint32_t expand_compressed(uint16_t c) {
         }
             return 0;
             }
-
-
         case 0x4:{ //SRLI SRAI ANDI SUB XOR OR AND 
             uint8_t funct2 = (c>>10)&0x3;
             uint8_t rd = ((c >> 7) & 0x7) + 8;
@@ -811,10 +809,11 @@ int main(int argc, char* argv[]) {
             instruction_32 = expand_compressed(instruction_16);
             length=2;
         }
-        if((invalid) || instruction_32==0) {
+        if(instruction_32==0) {
              break;
         }
     	CPU_execute(cpu_inst,instruction_32,&pc_modified,&invalid,length);
+        if(invalid){ break;}
         if(!pc_modified) cpu_inst->pc_+=length;
     }
 	printf("\n-----------------------RISC-V program terminate------------------------\nRegfile values:\n");
