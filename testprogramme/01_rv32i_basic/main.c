@@ -194,10 +194,10 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
                 }
                 case 0x4:{ //div
                     if(cpu->regfile_[rs2]==0){
-                        cpu->regfile_[rd]=0xFFFFFFFF;
+                        cpu->regfile_[rd]=0xFFFFFFFFu;
                     }
-                    else if(cpu->regfile_[rs1]==0x80000000 && cpu->regfile_[rs2]==-1){
-                        cpu->regfile_[rd]=0x80000000;
+                    else if(cpu->regfile_[rs1]==0x80000000u && cpu->regfile_[rs2]==0xFFFFFFFFu){
+                        cpu->regfile_[rd]=0x80000000u;
                     }
                     else{
                         cpu->regfile_[rd]=(int32_t)cpu->regfile_[rs1]/(int32_t)cpu->regfile_[rs2];
@@ -206,7 +206,7 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
                 }
                 case 0x5:{ //divu
                     if(cpu->regfile_[rs2]==0){
-                        cpu->regfile_[rd]=0xFFFFFFFF;
+                        cpu->regfile_[rd]=0xFFFFFFFFu;
                     }
                     else{
                         cpu->regfile_[rd]=cpu->regfile_[rs1]/cpu->regfile_[rs2];
@@ -217,7 +217,7 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
                     if(cpu->regfile_[rs2]==0){
                         cpu->regfile_[rd]=cpu->regfile_[rs1];
                     }
-                    else if(cpu->regfile_[rs1]==0x80000000 && cpu->regfile_[rs2]==-1){
+                    else if(cpu->regfile_[rs1]==0x80000000u && cpu->regfile_[rs2]==0xFFFFFFFFu){
                         cpu->regfile_[rd]=0;
                     }
                     else{
@@ -334,7 +334,6 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
                         cpu->pc_+=imm;
                         *pc_modified=1; 
                     }
-                    else
                     break;
                 }
                 case 0x7:{ //BGEU
@@ -655,6 +654,7 @@ uint32_t expand_compressed(uint16_t c) {
                 }
                 break;}
             }
+            break;
         }   
         case 0x5:{ // C.J
         uint32_t imm = ((c>>12)&0x1)<<11 | ((c>>11)&0x1)<<4 
@@ -766,12 +766,10 @@ int main(int argc, char* argv[]) {
 	CPU* cpu_inst;
 	cpu_inst = CPU_init(argv[1], argv[2]);
     for(uint32_t i = 0; i <1000000; i++) { // Hauptschleife: fuehrt Befehle aus, bis die Obergrenze erreicht ist
-    //1000000
         uint32_t instruction_32;
         int length;
         int pc_modified= 0;
         int invalid=0;
-        uint32_t old_pc=cpu_inst->pc_;
         uint16_t instruction_16 = *(uint16_t*)(cpu_inst->instr_mem_ + (cpu_inst->pc_ & 0xFFFFF));
         if((instruction_16 & 0x3)==0x3){ //nachladen da nicht compressed
             instruction_32 = (uint32_t)(*(uint16_t*)(cpu_inst->instr_mem_ + ((cpu_inst->pc_+2) & 0xFFFFF)))<<16|instruction_16;
