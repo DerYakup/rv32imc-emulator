@@ -116,62 +116,66 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
 
     switch (opcode) {
 
-        case 0x13: { // ADDI (I-Format, funct3 == 0)
-            // 12-Bit-Immediate aus den Bits 31:20 herausschneiden
-            uint32_t imm_u = (instruction >> 20) & 0xFFF;
+        case 0x13: { // I-Type
+    uint32_t imm_u = (instruction >> 20) & 0xFFF;
+    int32_t imm = (imm_u & 0x800) ? (int32_t)(imm_u | 0xFFFFF000) : (int32_t)imm_u;
 
-            // Vorzeichenerweiterung von 12 auf 32 Bit
-            int32_t imm = (imm_u & 0x800)
-                        ? (int32_t)(imm_u | 0xFFFFF000)
-                        : (int32_t)imm_u;
-            
-            if (rd != 0) // Register x0 bleibt immer 0
-
-                switch(funct3){
-                    case 0x0 : {//ADDI
-
-                cpu->regfile_[rd] = cpu->regfile_[rs1] + imm;
-                        break;
-                        }
-                    case 0x1 : {//SLLI
-                        if(funct7==0){cpu->regfile_[rd] = cpu->regfile_[rs1] << (imm & 0x1F);}
-                        else{*invalid=1;}
-                        break;
-                    }
-                    case 0x2 : {//SLTI
-                        cpu->regfile_[rd]= (int32_t)(cpu->regfile_[rs1]) < imm;
-                        break;
-                        }
-                    case 0x3 : { //SLTIU
-                        cpu->regfile_[rd]= cpu->regfile_[rs1]<(uint32_t)(imm);
-                        break;
-                    }
-                    case 0x4 : {//XORI
-                        cpu->regfile_[rd]=cpu->regfile_[rs1]^imm;
-                        break;
-                    }
-                    case 0x5 :{//SRLI / SRAI
-                        if(0x0== ((imm_u>>5)&0x7F)){
-                            cpu->regfile_[rd]=cpu->regfile_[rs1]>>(imm & 0x1F);
-                        }
-                        else if(0x20 == ((imm_u>>5)&0x7F)){
-                            cpu->regfile_[rd]=(int32_t)(cpu->regfile_[rs1])>>(imm & 0x1F);
-                        }
-                        else{*invalid=1;}
-                    break;
-                    }
-                    case 0x6:{ //ORI
-                        cpu->regfile_[rd]=cpu->regfile_[rs1]|imm;
-                        break;
-                    }
-                    case 0x7: {//ANDI
-                        cpu->regfile_[rd]=cpu->regfile_[rs1]&imm;
-                        break;
-                    }
-                    }
+    switch (funct3)
+    {
+        case 0x0: { // ADDI
+            if (rd != 0) cpu->regfile_[rd] = cpu->regfile_[rs1] + imm;
+            break;
+        }
+        case 0x1: { // SLLI
+            if (funct7 == 0x00) {
+                if (rd != 0) cpu->regfile_[rd] = cpu->regfile_[rs1] << (imm & 0x1F);
+            }
+            else {
+                *invalid = 1;
+            }
+            break;
+        }
+        case 0x2: { // SLTI
+            if (rd != 0) cpu->regfile_[rd] = (int32_t)cpu->regfile_[rs1] < imm;
+            break;
+        }
+        case 0x3: { // SLTIU
+            if (rd != 0) cpu->regfile_[rd] = cpu->regfile_[rs1] < (uint32_t)imm;
+            break;
+        }
+        case 0x4: { // XORI
+            if (rd != 0) cpu->regfile_[rd] = cpu->regfile_[rs1] ^ (uint32_t)imm;
+            break;
+        }
+        case 0x5: { // SRLI / SRAI
+            if (((imm_u >> 5) & 0x7F) == 0x00) {
+                if (rd != 0) cpu->regfile_[rd] = cpu->regfile_[rs1] >> (imm & 0x1F);
+            }
+            else if (((imm_u >> 5) & 0x7F) == 0x20) {
+                if (rd != 0) cpu->regfile_[rd] = (int32_t)cpu->regfile_[rs1] >> (imm & 0x1F);
+            }
+            else {
+                *invalid = 1;
+            }
             break;
         }
 
+        case 0x6: { // ORI
+            if (rd != 0) cpu->regfile_[rd] = cpu->regfile_[rs1] | (uint32_t)imm;
+            break;
+        }
+
+        case 0x7: { // ANDI
+            if (rd != 0) cpu->regfile_[rd] = cpu->regfile_[rs1] & (uint32_t)imm;
+            break;
+        }
+        default: {
+            *invalid = 1;
+            break;
+        }
+    }
+    break;
+}
         // R-Type
 case 0x33: { // R-Type
 
@@ -534,6 +538,7 @@ case 0x33: { // R-Type
                     }
             
             default:
+                *invalid=1;
                 break;
             }  
                 if(rd!=0) cpu->regfile_[rd] = value; 
@@ -568,6 +573,7 @@ case 0x33: { // R-Type
             break;
             }
         default:
+            *invalid=1;
             break;
         }  
         break;
