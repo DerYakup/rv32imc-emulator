@@ -832,39 +832,37 @@ uint32_t expand_compressed(uint16_t c) {
             
             return inst;
             }
-        case 0x4:{ //JR ,MV, EBREAK, JALR ADD
-            uint8_t bit12 = (c>>12)&0x1;
-            if(bit12== 0){
-                uint8_t rs1 = (c>>7)&0x1F;
-                if(rs1==0) {return 0;}
-                uint32_t inst = 0;
-                uint8_t rs2 = (c>>2)&0x1F;
-                if(rs2==0){ // JR jalr x0 0(rs1)
-                // offset = 0;
-                inst = (0x67) | ((uint32_t)rs1)<<15;
+        case 0x4: { // JR, MV, EBREAK, JALR, ADD
+            uint8_t bit12 = (c >> 12) & 0x1;
+            uint8_t rs1 = (c >> 7) & 0x1F;
+            uint8_t rs2 = (c >> 2) & 0x1F;
+            if (bit12 == 0) {
+                if (rs1 == 0) {
+                    return 0;
                 }
-                else{ // MV  add rd x0 rs2
-                    uint8_t rd = (c>>7)&0x1F;
-                    inst = (0x33) | ((uint32_t)rd)<<7 | ((uint32_t)rs2)<<20;
-
+                if (rs2 == 0) { // JR
+                    return (0x67) | ((uint32_t)rs1 << 15);
                 }
-                return inst;}
-
-            else{
-                uint8_t rs1 = (c>>7)&0x1F;
-                uint32_t inst = 0;
-                uint8_t rs2 = (c>>2)&0x1F;
-                if(rs1==0 && rs2==0){ return 0;  } //ebreak
-                else if(rs1!=0 &&rs2==0){ //JALR
-                    inst = (0x67) | (1<<7) | (((uint32_t)rs1)<<15);
+                else { // MV
+                    uint8_t rd = (c >> 7) & 0x1F;
+                    return (0x33) | ((uint32_t)rd << 7) | ((uint32_t)rs2 << 20);
                 }
-                else if(rs1!=0 && rs2!=0){ //ADD
-                    uint8_t rd = (c>>7)&0x1F;
-                    inst = (0x33) | (((uint32_t)rd)<<7) | (((uint32_t)rd)<<15) | (((uint32_t)rs2)<<20);
-                }
-                return inst;}
-                return 0;
             }
+            else { // bit12 == 1
+                if (rs1 == 0 && rs2 == 0) { // EBREAK
+                    return 0;
+                }
+                if (rs1 == 0) { // ungültiger Fall
+                    return 0;
+                }
+                if (rs2 == 0) { // JALR
+                    return (0x67) | (1 << 7) | ((uint32_t)rs1 << 15);
+                }
+                // ADD
+                uint8_t rd = (c >> 7) & 0x1F;
+                return (0x33) | ((uint32_t)rd << 7) | ((uint32_t)rd << 15) | ((uint32_t)rs2 << 20);
+            }
+        }
             
         case 0x6:{ //SWSP
             uint8_t rs2 = (c>>2)&0x1F;
