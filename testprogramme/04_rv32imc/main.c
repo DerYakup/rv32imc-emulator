@@ -129,7 +129,7 @@ void CPU_store_byte(CPU* cpu, uint32_t addr, uint8_t value) {
  * Instruction fetch Instruction decode, Execute, Memory access, Write back
  */
 // instruction & 0x7F opcode extrahieren
-void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified) {
+void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,int length) {
     uint32_t old_x1 = cpu->regfile_[1];
 	//uint32_t instruction = *(uint32_t*)(cpu->instr_mem_ + (cpu->pc_ & 0xFFFFF));
     uint32_t opcode = instruction & 0x7F;
@@ -390,7 +390,7 @@ Bit 7 → imm[11]*/
                 imm_u=imm_u|0xFFE00000;
             }
             int32_t imm= (int32_t)imm_u;
-            if(rd!=0) cpu->regfile_[rd]=cpu->pc_ +4;
+            if(rd!=0) cpu->regfile_[rd]=cpu->pc_ +length;
             cpu->pc_+=imm;
             *pc_modified=1; 
             break;
@@ -406,7 +406,7 @@ Bit 7 → imm[11]*/
             uint32_t rs1value = cpu->regfile_[rs1];
 
             if (rd != 0) {
-                cpu->regfile_[rd] = old_pc + 4;
+                cpu->regfile_[rd] = old_pc + length;
             }
 
             cpu->pc_ = (rs1_value + imm) & ~1;
@@ -519,6 +519,7 @@ Bit 7 → imm[11]*/
     }
         default:
             // Unbekannter Befehl: pc bleibt stehen -> Programm haelt an
+            *invalid = 1;
             break;
     }
 	// TODO
@@ -814,13 +815,74 @@ uint32_t expand_compressed(uint16_t c) {
         default:
             return 0;
         }
-        
-        break;
-    case 0x2: //Quadrant 2
-        
-        break;
-    }
 
+    case 0x2: {//Quadrant 2
+
+        //5 cases 
+        switch (funct3)
+        {
+        case 0x0:{ //SLLI    slli rd rd shamt 
+        uint8_t rd = (c>>7)&0x1F;
+            if(((c>>12)&0x1) ||rd==0){
+                return 0;
+            }
+            uint32_t shamt =((c>>12)&0x1)<<5 |((c>>2)&0x1F);
+            uint32_t inst = (0x13) | ((uint32_t)rd)<<7 | (0x1)<<12| ((uint32_t)rd)<<15|((uint32_t)shamt)<<20;
+            return inst;
+            }
+        case 0x2:{ //LWSP
+            uint8_t rd = (c>>7)&0x1F;
+            if(rd == 0) return 0;
+            uint32_t uimm = ((c>>12)&0x1)<<5 | ((c>>4)&0x7)<<2 | ((c>>2)&0x3)<<6;
+            uint32_t inst = (0x03) | ((uint32_t)rd)<<7 | (0x2)<<12 | 2<<15 | ((uint32_t)uimm)<<20;
+            
+            return inst;
+            }
+        case 0x4:{ //JR ,MV, EBREAK, JALR ADD
+            uint8_t bit12 = (c>>12)&0x1;
+            if(bit12== 0){
+                uint8_t rs1 = (c>>7)&0x1F;
+                if(rs1==0) return 0;
+                uint32_t inst = 0;
+                uint8_t rs2 = (c>>2)&0x1F;
+                if(rs2==0){ // JR jalr x0 0(rs1)
+                // offset = 0;
+                inst = (0x67) | ((uint32_t)rs1)<<15;
+                }
+                else{ // MV  add rd x0 rs2
+                    uint8_t rd = (c>>7)&0x1F;
+                    inst = (0x33) | ((uint32_t)rd)<<7 | ((uint32_t)rs2)<<20;
+
+                }
+                return inst;}
+
+            else{
+                uint8_t rs1 = (c>>7)&0x1F;
+                uint32_t inst = 0;
+                uint8_t rs2 = (c>>2)&0x1F;
+                if(rs1==0 && rs2==0){ // ebreak
+                    return 0;
+                }
+                else if(rs1!=0 &&rs2==0){ //JALR
+                    inst = (0x67) | (1<<7) | (((uint32_t)rs1)<<15);
+                }
+                else if(rs1!=0 && rs2!=0){ //ADD
+                    uint8_t rd = (c>>7)&0x1F;
+                    inst = (0x33) | (((uint32_t)rd)<<7) | (((uint32_t)rd)<<15) | (((uint32_t)rs2)<<20);
+                }
+                return inst;}
+                return 0;
+            }
+            
+        case 0x6:{ //SWSP
+            uint8_t rs2 = (c>>2)&0x1F;
+            uint32_t uimm = ((c>>9)&0xF)<<2 | ((c>>7)&0x3)<<6;
+            uint32_t inst = (0x23) | ((uimm & 0x1F)<<7)|(0x2 << 12)| (2<<15)  | (((uint32_t)rs2)<<20)| ((uimm>>5)<<25);
+            return inst;
+            }
+        }
+        }
+    }
     return 0; // Ungueltige Instruktion
     }
 
@@ -834,18 +896,36 @@ int main(int argc, char* argv[]) {
         uint32_t instruction_32;
         int length;
         int pc_modified= 0;
+        int invalid=0;
         uint32_t old_pc=cpu_inst->pc_;
+       /* printf("PC=%08X BYTE0=%02X BYTE1=%02X\n",
+       cpu_inst->pc_,
+       cpu_inst->instr_mem_[cpu_inst->pc_ & 0xFFFFF],
+       cpu_inst->instr_mem_[(cpu_inst->pc_ & 0xFFFFF) + 1]); */
         uint16_t instruction_16 = *(uint16_t*)(cpu_inst->instr_mem_ + (cpu_inst->pc_ & 0xFFFFF));
+        //printf("PC=%08X instruction16=%04X\n",cpu_inst->pc_, instruction_16);
         if((instruction_16 & 0x3)==0x3){ //nachladen da nicht compressed
             instruction_32 = (uint32_t)(*(uint16_t*)(cpu_inst->instr_mem_ + ((cpu_inst->pc_+2) & 0xFFFFF)))<<16|instruction_16;
             length=4;
         }
+        
         else{ //16 bit Anweisung
-        instruction_32 = expand_compressed(instruction_16);
-        length=2;
+            if (instruction_16 == 0x9002) {
+                break;  // C.EBREAK → Emulator beenden
+    }
+            instruction_32 = expand_compressed(instruction_16);
+            length=2;
         }
-        //printf("PC=%08X INST=%08X\n", cpu_inst->pc_, instruction_32);
-    	CPU_execute(cpu_inst,instruction_32,&pc_modified);
+         //  printf(" INSTRUCTION at PC = %08X, INST = %08X\n",
+         //  old_pc, instruction_32);
+        if((invalid) || instruction_32==0) {
+          //  printf("INVALID INSTRUCTION at PC = %08X, INST = %08X\n",
+        //   old_pc, instruction_32);
+             break;
+
+
+        }
+    	CPU_execute(cpu_inst,instruction_32,&pc_modified,&invalid,length);
         if(!pc_modified) cpu_inst->pc_+=length;
     }
 	printf("\n-----------------------RISC-V program terminate------------------------\nRegfile values:\n");

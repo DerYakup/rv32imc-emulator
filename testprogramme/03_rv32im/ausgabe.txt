@@ -1,0 +1,73 @@
+C Praktikum
+HU Risc-V  Emulator 2026
+size of instruction memory: 3616 Byte
+
+read data for data memory: 1100 Byte
+
+Testprogramm 3: RV32IM (Multiplikation/Division)
+
+--- MUL (untere 32 Bit) ---
+  17 * 23 == 391: erwartet=0x00000187, tatsaechlich=0x00000187  OK
+  -7 * 6 == -42: erwartet=0xFFFFFFD6, tatsaechlich=0xFFFFFFD6  OK
+  0x10000 * 0x10000 (Overflow) == 0: erwartet=0x00000000, tatsaechlich=0x00000000  OK
+
+--- MULH / MULHU / MULHSU ---
+  MULH   (-1)*(-1) obere = 0: erwartet=0x00000000, tatsaechlich=0x00000000  OK
+  MULHU  0xFFFFFFFF^2 obere = 0xFFFFFFFE: erwartet=0xFFFFFFFE, tatsaechlich=0xFFFFFFFE  OK
+  MULHSU -1 * 0xFFFFFFFF obere = 0xFFFFFFFF: erwartet=0xFFFFFFFF, tatsaechlich=0xFFFFFFFF  OK
+
+--- DIV / DIVU / REM / REMU ---
+  DIV  100 / 7 == 14: erwartet=0x0000000E, tatsaechlich=0x0000000E  OK
+  DIV  -100 / 7 == -14: erwartet=0xFFFFFFF2, tatsaechlich=0xFFFFFFF2  OK
+  DIVU 100 / 7 == 14: erwartet=0x0000000E, tatsaechlich=0x0000000E  OK
+  REM  100 % 7 == 2: erwartet=0x00000002, tatsaechlich=0x00000002  OK
+  REM  -100 % 7 == -2: erwartet=0xFFFFFFFE, tatsaechlich=0xFFFFFFFE  OK
+  REMU 100 % 7 == 2: erwartet=0x00000002, tatsaechlich=0x00000002  OK
+  REMU 0xFFFFFFF6 % 7 == 1: erwartet=0x00000001, tatsaechlich=0x00000001  OK
+
+--- Sonderfaelle (Division durch 0, Overflow) ---
+  DIV  x / 0 == 0xFFFFFFFF: erwartet=0xFFFFFFFF, tatsaechlich=0xFFFFFFFF  OK
+  DIVU x / 0 == 0xFFFFFFFF: erwartet=0xFFFFFFFF, tatsaechlich=0xFFFFFFFF  OK
+  REM  x % 0 == x (=123): erwartet=0x0000007B, tatsaechlich=0x0000007B  OK
+  REMU x % 0 == x (=123): erwartet=0x0000007B, tatsaechlich=0x0000007B  OK
+  DIV  INT_MIN / -1 == INT_MIN: erwartet=0x80000000, tatsaechlich=0x80000000  OK
+  REM  INT_MIN % -1 == 0: erwartet=0x00000000, tatsaechlich=0x00000000  OK
+
+Summe: 19 von 19 Tests bestanden
+ALLE TESTS BESTANDEN
+----- Programm Ende -----
+
+-----------------------RISC-V program terminate------------------------
+Regfile values:
+0: 0
+1: 8
+2: 3FF000
+3: 0
+4: 0
+5: 0
+6: 0
+7: 0
+8: 0
+9: 0
+10: A
+11: FFFFFFFF
+12: 0
+13: 2
+14: A
+15: 0
+16: 0
+17: 0
+18: 0
+19: 0
+20: 0
+21: 0
+22: 0
+23: 0
+24: 0
+25: 0
+26: 0
+27: 0
+28: 0
+29: 0
+30: 0
+31: 0
