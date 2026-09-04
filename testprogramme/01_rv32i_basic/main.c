@@ -73,28 +73,6 @@ void CPU_load_data_mem(CPU* cpu, const char* filename) {
 	return;
 }
 
-// loads an 8-bit byte form data memory at the given address
-uint8_t CPU_load_byte(CPU* cpu, uint32_t addr){
-   return cpu -> data_mem_[addr];
-}
-
-
-uint16_t CPU_load_halfword(CPU* cpu, uint32_t addr){
-    uint16_t halfword = cpu->data_mem_[addr+1];
-    halfword =halfword<<8;
-    halfword = (halfword | (cpu->data_mem_[addr])); 
-    return halfword;
-} 
-
-
-uint32_t CPU_load_word(CPU* cpu, uint32_t addr){
-    uint32_t word = ((uint32_t)cpu->data_mem_[addr + 3] << 24)
-                  | ((uint32_t)cpu->data_mem_[addr + 2] << 16)
-                  | ((uint32_t)cpu->data_mem_[addr + 1] << 8)
-                  |  (uint32_t)cpu->data_mem_[addr];
-    return word;
-}
-
 /*
 Erweitert einen n-Bit-Wert auf 32 Bit unter Beruecksichtigung
 des Vorzeichens. Bit n-1 wird als Vorzeichenbit interpretiert.
@@ -412,7 +390,7 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
             switch (funct3)
             {   
                 case 0x0:{ //LB
-                    uint8_t value_8 = CPU_load_byte(cpu, addr);
+                    uint8_t value_8 = cpu -> data_mem_[addr];
                     value= value_8;
                     if(value_8 & 0x80){
                         value |=0xFFFFFF00;
@@ -420,7 +398,7 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
                     break;
                     }
                 case 0x1: {//LH
-                    uint16_t value_16 = CPU_load_halfword(cpu,addr);
+                    uint16_t value_16 = cpu->data_mem_[addr] |((uint16_t)cpu->data_mem_[addr + 1] << 8);
                     value=value_16;
                     if(value_16 & 0x8000){
                         value|=0xFFFF0000;
@@ -428,19 +406,17 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
                     break;
                 }
                 case 0x2:{ // LW
-                    value= CPU_load_word(cpu, addr);
+                    value=  ((uint32_t)cpu->data_mem_[addr + 3] << 24) | ((uint32_t)cpu->data_mem_[addr + 2] << 16)
+                    | ((uint32_t)cpu->data_mem_[addr + 1] << 8) |  (uint32_t)cpu->data_mem_[addr];
                     break;
                 }
                 case 0x4: {//LBU
-                    uint8_t value_8 = CPU_load_byte(cpu, addr);
-
-                    value= value_8;
+                    value= cpu -> data_mem_[addr];
                     break;
                     }
 
                 case 0x5: {//LHU
-                    uint16_t value_16 = CPU_load_halfword(cpu,addr);
-                    value=value_16;
+                    value=cpu->data_mem_[addr] |((uint16_t)cpu->data_mem_[addr + 1] << 8);
                     break;
                     }
             
