@@ -173,214 +173,228 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
         }
 
         // R-Type
-        case 0x33: { 
-        if(rd!=0){
-            if(funct7==0x01){ // M Erweiterung
-                switch (funct3)
-                {
-                case 0x0:{ //MUL
-                    cpu->regfile_[rd]=(uint32_t)((int64_t)(int32_t)cpu->regfile_[rs1] * (int64_t)(int32_t)cpu->regfile_[rs2]);
-                    break;
-                }
-                 case 0x1:{ //MULH
-                    cpu->regfile_[rd]=((int64_t)(int32_t)cpu->regfile_[rs1]*(int64_t)(int32_t)cpu->regfile_[rs2]) >> 32;
-                    break;
-                }
-                 case 0x2:{ //MULHSU
-                    cpu->regfile_[rd]= ((int64_t)(int32_t)cpu->regfile_[rs1]*(uint64_t)cpu->regfile_[rs2])>>32;
-                    break;
-                }
-                 case 0x3:{ //MULHU
-                    cpu->regfile_[rd]= ((uint64_t)cpu->regfile_[rs1]*(uint64_t)cpu->regfile_[rs2])>>32;
-                    break;
-                }
-                case 0x4:{ //div
-                    if(cpu->regfile_[rs2]==0){
-                        cpu->regfile_[rd]=0xFFFFFFFFu;
-                    }
-                    else if(cpu->regfile_[rs1]==0x80000000u && cpu->regfile_[rs2]==0xFFFFFFFFu){
-                        cpu->regfile_[rd]=0x80000000u;
-                    }
-                    else{
-                        cpu->regfile_[rd]=(int32_t)cpu->regfile_[rs1]/(int32_t)cpu->regfile_[rs2];
-                    }
-                    break;
-                }
-                case 0x5:{ //divu
-                    if(cpu->regfile_[rs2]==0){
-                        cpu->regfile_[rd]=0xFFFFFFFFu;
-                    }
-                    else{
-                        cpu->regfile_[rd]=cpu->regfile_[rs1]/cpu->regfile_[rs2];
-                    }
-                    break;
-                }
-                case 0x6:{ //rem
-                    if(cpu->regfile_[rs2]==0){
-                        cpu->regfile_[rd]=cpu->regfile_[rs1];
-                    }
-                    else if(cpu->regfile_[rs1]==0x80000000u && cpu->regfile_[rs2]==0xFFFFFFFFu){
-                        cpu->regfile_[rd]=0;
-                    }
-                    else{
-                        cpu->regfile_[rd]=(int32_t)cpu->regfile_[rs1]%(int32_t)cpu->regfile_[rs2];
-                    }
-                    break;
-                }
-                case 0x7:{ //remu
-                    if(cpu->regfile_[rs2]==0){
-                        cpu->regfile_[rd]=cpu->regfile_[rs1];
-                    }
-                    else{
-                        cpu->regfile_[rd]=cpu->regfile_[rs1]%cpu->regfile_[rs2];
-                    }
-                    break;
-                }        
-                default:
-                    break;
-                }
-            }
-            else{
-    switch (funct3)
-    {
-        case 0x0: { // ADD / SUB
+case 0x33: { // R-Type
 
-            if (funct7 == 0x00) { // ADD
-                if (rd != 0) {
-                    cpu->regfile_[rd] =cpu->regfile_[rs1] + cpu->regfile_[rs2];
+    if (funct7 == 0x01) { // M-Erweiterung
+
+        switch (funct3)
+        {
+            case 0x0: { // MUL
+                uint32_t result =(uint32_t)((int64_t)(int32_t)cpu->regfile_[rs1] *(int64_t)(int32_t)cpu->regfile_[rs2]);
+                if (rd != 0) {cpu->regfile_[rd] = result;
                 }
+                break;
             }
-            else if (funct7 == 0x20) { // SUB
-                if (rd != 0) {cpu->regfile_[rd] =cpu->regfile_[rs1] - cpu->regfile_[rs2];
+            case 0x1: { // MULH
+                uint32_t result =(uint32_t)(((int64_t)(int32_t)cpu->regfile_[rs1] *(int64_t)(int32_t)cpu->regfile_[rs2]) >> 32);
+                if (rd != 0) {
+                    cpu->regfile_[rd] = result;
+                }
+                break;
             }
-            else {
+
+            case 0x2: { // MULHSU
+                uint32_t result = (uint32_t)(((int64_t)(int32_t)cpu->regfile_[rs1] *(uint64_t)cpu->regfile_[rs2]) >> 32);
+                if (rd != 0) {
+                    cpu->regfile_[rd] = result;
+                }
+                break;
+            }
+
+            case 0x3: { // MULHU
+                uint32_t result =
+                    (uint32_t)(((uint64_t)cpu->regfile_[rs1] *(uint64_t)cpu->regfile_[rs2]) >> 32);
+                if (rd != 0) {
+                    cpu->regfile_[rd] = result;
+                }
+                break;
+            }
+
+            case 0x4: { // DIV
+                uint32_t result;
+                if (cpu->regfile_[rs2] == 0) {
+                    result = 0xFFFFFFFFu;
+                }
+                else if (cpu->regfile_[rs1] == 0x80000000u &&cpu->regfile_[rs2] == 0xFFFFFFFFu) {
+                    result = 0x80000000u;
+                }
+                else {
+                    result =(uint32_t)((int32_t)cpu->regfile_[rs1] /(int32_t)cpu->regfile_[rs2]);
+                }
+
+                if (rd != 0) {
+                    cpu->regfile_[rd] = result;
+                }
+
+                break;
+            }
+
+            case 0x5: { // DIVU
+                uint32_t result;
+
+                if (cpu->regfile_[rs2] == 0) {
+                    result = 0xFFFFFFFFu;
+                }
+                else {
+                    result =cpu->regfile_[rs1] / cpu->regfile_[rs2];
+                }
+
+                if (rd != 0) {
+                    cpu->regfile_[rd] = result;
+                }
+
+                break;
+            }
+
+            case 0x6: { // REM
+                uint32_t result;
+
+                if (cpu->regfile_[rs2] == 0) {
+                    result = cpu->regfile_[rs1];
+                }
+                else if (cpu->regfile_[rs1] == 0x80000000u &&cpu->regfile_[rs2] == 0xFFFFFFFFu) {
+                    result = 0;
+                }
+                else {
+                    result =
+                        (uint32_t)((int32_t)cpu->regfile_[rs1] %(int32_t)cpu->regfile_[rs2]);
+                }
+
+                if (rd != 0) {
+                    cpu->regfile_[rd] = result;
+                }
+
+                break;
+            }
+
+            case 0x7: { // REMU
+                uint32_t result;
+
+                if (cpu->regfile_[rs2] == 0) {
+                    result = cpu->regfile_[rs1];
+                }
+                else {
+                    result =
+                        cpu->regfile_[rs1] % cpu->regfile_[rs2];
+                }
+
+                if (rd != 0) {
+                    cpu->regfile_[rd] = result;
+                }
+
+                break;
+            }
+
+            default:
                 *invalid = 1;
-            }
-
-            break;
-        }
-
-        case 0x1: { // SLL
-
-            if (funct7 == 0x00) {
-                if (rd != 0) {
-                    cpu->regfile_[rd] =
-                        cpu->regfile_[rs1] <<
-                        (cpu->regfile_[rs2] & 0x1F);
-                }
-            }
-            else {
-                *invalid = 1;
-            }
-
-            break;
-        }
-
-        case 0x2: { // SLT
-
-            if (funct7 == 0x00) {
-                if (rd != 0) {
-                    cpu->regfile_[rd] =
-                        ((int32_t)cpu->regfile_[rs1] <
-                         (int32_t)cpu->regfile_[rs2]);
-                }
-            }
-            else {
-                *invalid = 1;
-            }
-
-            break;
-        }
-
-        case 0x3: { // SLTU
-
-            if (funct7 == 0x00) {
-                if (rd != 0) {
-                    cpu->regfile_[rd] =
-                        cpu->regfile_[rs1] < cpu->regfile_[rs2];
-                }
-            }
-            else {
-                *invalid = 1;
-            }
-
-            break;
-        }
-
-        case 0x4: { // XOR
-
-            if (funct7 == 0x00) {
-                if (rd != 0) {
-                    cpu->regfile_[rd] =
-                        cpu->regfile_[rs1] ^ cpu->regfile_[rs2];
-                }
-            }
-            else {
-                *invalid = 1;
-            }
-
-            break;
-        }
-case 0x5: { // SRL / SRA
-
-            if (funct7 == 0x00) { // SRL
-                if (rd != 0) {
-                    cpu->regfile_[rd] =cpu->regfile_[rs1] >>(cpu->regfile_[rs2] & 0x1F);
-                }
-            }
-            else if (funct7 == 0x20) { // SRA
-                if (rd != 0) {
-                    cpu->regfile_[rd] =
-                        (int32_t)cpu->regfile_[rs1] >>
-                        (cpu->regfile_[rs2] & 0x1F);
-                }
-            }
-            else {
-                *invalid = 1;
-            }
-
-            break;
-        }
-
-        case 0x6: { // OR
-
-            if (funct7 == 0x00) {
-                if (rd != 0) {
-                    cpu->regfile_[rd] =
-                        cpu->regfile_[rs1] | cpu->regfile_[rs2];
-                }
-            }
-            else {
-                *invalid = 1;
-            }
-
-            break;
-        }
-
-        case 0x7: { // AND
-
-            if (funct7 == 0x00) {
-                if (rd != 0) {
-                    cpu->regfile_[rd] =
-                        cpu->regfile_[rs1] & cpu->regfile_[rs2];
-                }
-            }
-            else {
-                *invalid = 1;
-            }
-            break;
-        }
-        default: {
-            *invalid = 1;
-            break;
+                break;
         }
     }
+
+    else if (funct7 == 0x00 || funct7 == 0x20) { // normale R-Type
+
+        switch (funct3)
+        {
+            case 0x0: { // ADD / SUB
+
+                if (funct7 == 0x00) { // ADD
+                    if (rd != 0) {cpu->regfile_[rd] =cpu->regfile_[rs1] + cpu->regfile_[rs2];}
+                }
+                else if (funct7 == 0x20) { // SUB
+                    if (rd != 0) {cpu->regfile_[rd] =cpu->regfile_[rs1] - cpu->regfile_[rs2];}
+                }
+                else {*invalid = 1;}
+                break;
+            }
+            case 0x1: { // SLL
+                if (funct7 == 0x00) {
+                    if (rd != 0) {cpu->regfile_[rd] = cpu->regfile_[rs1] <<(cpu->regfile_[rs2] & 0x1F);}
+                }
+                else {*invalid = 1; }
+                break;
+            }
+            case 0x2: { // SLT
+                if (funct7 == 0x00) {
+                    if (rd != 0) {
+                        cpu->regfile_[rd] =((int32_t)cpu->regfile_[rs1] <(int32_t)cpu->regfile_[rs2]);}
+                }
+                else {
+                    *invalid = 1;
+                }
+
+                break;
+            }
+
+            case 0x3: { // SLTU
+
+                if (funct7 == 0x00) {
+                    if (rd != 0) {cpu->regfile_[rd] =cpu->regfile_[rs1] <cpu->regfile_[rs2];}
+                }
+                else {*invalid = 1; }
+                break;
+            }
+            case 0x4: { // XOR
+
+                if (funct7 == 0x00) {
+                    if (rd != 0) {cpu->regfile_[rd] =cpu->regfile_[rs1] ^cpu->regfile_[rs2];}
+                }
+                else {
+                    *invalid = 1;
+                }
+
+                break;
+            }
+
+            case 0x5: { // SRL / SRA
+
+                if (funct7 == 0x00) { // SRL
+                    if (rd != 0) {
+                        cpu->regfile_[rd] =cpu->regfile_[rs1] >>(cpu->regfile_[rs2] & 0x1F);
+                    }
+                }
+                else if (funct7 == 0x20) { // SRA
+                    if (rd != 0) {cpu->regfile_[rd] =(int32_t)cpu->regfile_[rs1] >>(cpu->regfile_[rs2] & 0x1F);}
+                }
+                else {
+                    *invalid = 1;
+                }
+                break;
+            }
+            case 0x6: { // OR
+                if (funct7 == 0x00) {
+                    if (rd != 0) {
+                        cpu->regfile_[rd] =cpu->regfile_[rs1] |cpu->regfile_[rs2];
+                    }
+                }
+                else {
+                    *invalid = 1;
+                }
+                break;
+            }
+            case 0x7: { // AND
+                if (funct7 == 0x00) {
+                    if (rd != 0) {
+                        cpu->regfile_[rd] =
+                            cpu->regfile_[rs1] &
+                            cpu->regfile_[rs2];
+                    }
+                }
+                else {
+                    *invalid = 1;
+                }
+                break;
+            }
+            default:
+                *invalid = 1;
+                break;
+        }
+    }
+    else {
+        *invalid = 1;
+    }
+
     break;
-    }
-        }
-        }
-        break;
-        }
+}
 
         case 0x63: { //B-Type
                 uint32_t imm_u= ((instruction >> 31) & 0x1) << 12  | ((instruction >> 25) & 0x3F) << 5 | ((instruction >> 8) & 0xF) << 1 | ((instruction >>7)& 0x1)<<11 ;
