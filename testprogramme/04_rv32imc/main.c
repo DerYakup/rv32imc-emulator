@@ -92,7 +92,6 @@ uint32_t CPU_load_word(CPU* cpu, uint32_t addr){
                   | ((uint32_t)cpu->data_mem_[addr + 2] << 16)
                   | ((uint32_t)cpu->data_mem_[addr + 1] << 8)
                   |  (uint32_t)cpu->data_mem_[addr];
-
     return word;
 }
 
@@ -130,8 +129,6 @@ void CPU_store_byte(CPU* cpu, uint32_t addr, uint8_t value) {
  */
 // instruction & 0x7F opcode extrahieren
 void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,int length) {
-    uint32_t old_x1 = cpu->regfile_[1];
-	//uint32_t instruction = *(uint32_t*)(cpu->instr_mem_ + (cpu->pc_ & 0xFFFFF));
     uint32_t opcode = instruction & 0x7F;
     uint32_t rd     = (instruction >> 7)  & 0x1F;
     uint32_t rs1    = (instruction >> 15) & 0x1F;
@@ -198,7 +195,6 @@ void CPU_execute(CPU* cpu,uint32_t instruction,int* pc_modified, int* invalid,in
         // R-Type
         case 0x33: { 
         if(rd!=0){
-
             if(funct7==0x01){ // M Erweiterung
                 switch (funct3)
                 {
@@ -380,7 +376,6 @@ Bit 7 → imm[11]*/
                 default:
                     break;
                 }          
-            
             break;
         }
 
@@ -691,7 +686,7 @@ uint32_t expand_compressed(uint16_t c) {
                 return 0;
             }
             int32_t nzimm = sign_extend(imm,18);
-            uint32_t inst = (0x37) | ((uint32_t)rd) <<7 | (uint32_t)nzimm <<12;
+            uint32_t inst = (0x37) | ((uint32_t)rd) <<7 | (uint32_t)nzimm;
             return inst;
         }
             return 0;
